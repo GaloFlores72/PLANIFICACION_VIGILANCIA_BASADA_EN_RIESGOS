@@ -116,7 +116,6 @@ function ConstatacionEliminar(_id) {
                     if (resultado) {
                         modalConstataciones(idOrientacion);
                     }
-
                 },
                 failure: function (response) {
                     MensajeIco("Constatación", response.responseText, "error");
