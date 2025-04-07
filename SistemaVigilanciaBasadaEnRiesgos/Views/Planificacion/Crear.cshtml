@@ -1,0 +1,216 @@
+﻿@model IEnumerable<CapaModeloRBS.tbRespuestaLV>
+
+@{
+    ViewBag.Title = "Crear";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Inicio</a></li>
+                    <li class="breadcrumb-item active">Planificación</li>
+                </ol>
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <table class="table table-bordered table-hover ">
+                    <tr>
+                        <td class="text-center" style="background-color:#c2bebe">
+                            <h5> SISTEMA REGIONAL DE COOPERACIÓN PARA LA VIGILANCIA DE LA SEGURIDAD OPERACIONAL</h5>
+                        </td>
+                    </tr>
+                </table>                
+                <!-- Main content -->
+                <div class="invoice p-3 mb-3">
+                    <div class="form-group row">
+                        <a class="btn btn-outline-success" href="#" onclick="Crear();"> Nuevo registro</a>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <table id="tbRespuestaslv" class="table table-bordered table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Oid</th>
+                                        <th>Tipo Servicio</th>
+                                        <th>Lista Verificación</th>
+                                        <th>Nombre Organización</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Fecha Fin</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                    <tr>
+                                        <td>@Html.DisplayFor(modelItem => item.RespuestaID)</td>
+                                        <td>@Html.DisplayFor(modelItem => item.oListaDeVerificacion.oTipoProveedorServicio.DescripcionTipoProveedor)</td>
+                                        <td>@Html.DisplayFor(modelItem => item.oListaDeVerificacion.Nombre)</td>
+                                        <td>@Html.DisplayFor(modelItem => item.oOrganizacion.Nombre)</td>
+                                        <td>@Html.DisplayFor(modelItem => item.FechaInicio)</td>
+                                        <td>@Html.DisplayFor(modelItem => item.FechaFin)</td>
+                                        <td>
+                                            <a id="editar" href="@Url.Action("Formulario", "Planificacion", new { idResp =  item.RespuestaID, idListaV = item.oListaDeVerificacion.ListaID})" class="btn btn-outline-secondary btn-sm">Editar</a>
+                                        </td>
+                                    </tr>
+
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade " id="modalCrear" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="card-title">Registro Vigilancia de la Seguridad Operacional</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="card card-default">
+                <div class="card-body">
+                    <div class="col-12">
+                        <div class="card card-info">
+                            <div class="form-horizontal">                             
+                                <div class="card-body">
+                                    <form id="form">
+                                        <input type="hidden" id="RespuestaID", name="RespuestaID" />
+                                        <div class="form-group row">
+                                            <label for="IdTipoProveedorServicio" class="col-sm-4 col-form-label col-form-label-sm">Tipo provedor sevicio:</label>
+                                            <div class="col-sm-8">
+                                                @if (ViewBag.ListaTipoServicio != null)
+                                                {
+                                                    @Html.DropDownList("IdTipoProveedorServicio", (SelectList)ViewBag.ListaTipoServicio, new { @class = "form-control custom-select-sm" })
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="IdListaVerificacion" class="col-sm-4 col-form-label col-form-label-sm">Lista verificación:</label>
+                                            <div class="col-sm-8">
+                                                <select class="form-control custom-select-sm" id="IdListaVerificacion" style="width: 100%;"></select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="OrganizacionID" class="col-sm-4 col-form-label col-form-label-sm">Nombre organización de mantenimiento:</label>
+                                            <div class="col-sm-8">
+                                                @if (ViewBag.ListaSelectOrganizacion != null)
+                                                {
+                                                    @Html.DropDownList("OrganizacionID", (SelectList)ViewBag.ListaSelectOrganizacion, new { @class = "form-control custom-select-sm" })
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="Direccion" class="col-sm-4 col-form-label col-form-label-sm">Dirección:<span class="error"></span></label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" id="Direccion" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="Telefono" class="col-sm-4 col-form-label col-form-label-sm">Télefono:<span class="error"></span></label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm " id="Telefono" autocomplete="off" , maxlength="40" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="Correo" class="col-sm-4 col-form-label col-form-label-sm">Correo electrónico:<span class="error"></span></label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" id="Correo" autocomplete="off" , maxlength="40" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="GerenteResponsable" class="col-sm-4 col-form-label col-form-label-sm">Nombre gerente responsable:</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" id="GerenteResponsable" />
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label for="Certificado" class="col-sm-4 col-form-label col-form-label-sm">No. certificado OMA:</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" id="Certificado" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="FechaInicio" class="col-sm-4 col-form-label col-form-label-sm">Fecha inicio:</label>
+                                            <div class="col-sm-3">
+                                                <input type="date" class="form-control form-control-sm" id="FechaInicio" autocomplete="off" />
+                                            </div>
+                                            <label for="FechaFin" class="col-sm-2 col-form-label col-form-label-sm">Fecha Término:</label>
+                                            <div class="col-sm-3">
+                                                <input type="date" class="form-control form-control-sm " id="FechaFin" autocomplete="off" />
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label for="UsuarioID" class="col-sm-4 col-form-label col-form-label-sm">Inspector responsable vigilancia:</label>
+                                            <div class="col-sm-8">
+                                                @if (ViewBag.ListaUsuarios != null)
+                                                {
+                                                    @Html.DropDownList("UsuarioID", (SelectList)ViewBag.ListaUsuarios, new { @class = "custom-select custom-select-sm" })
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label for="InspectorID" class="col-sm-4 col-form-label col-form-label-sm">Inspectores:</label>
+                                            <div class="col-sm-7">
+                                                @if (ViewBag.ListaUsuarios != null)
+                                                {
+                                                    @Html.DropDownList("InspectorID", (SelectList)ViewBag.ListaUsuarios, new { @class = "custom-select custom-select-sm" })
+                                                }
+                                            </div>
+                                            <div class="col-sm-1">
+                                                <a class="btn btn-sm btn-default" href="#" onclick="agregarInpectores()">+</a>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="InspectorID" class="col-sm-4 col-form-label col-form-label-sm"></label>
+                                            <div class="col-sm-8">
+                                                <table id="tbInspectores" class="table table-bordered table-sm" style="width:100%; font-size:12px">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Código</th>
+                                                            <th>Nombre y Apellidos</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Cerrar</button>
+                    <button  type="button" class="btn btn-sm btn-primary" onclick="Guardar();">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts{
+    <script src="@Url.Content("~/Scripts/Views/crearPLanificacion.js")" type="text/javascript"></script>
+}

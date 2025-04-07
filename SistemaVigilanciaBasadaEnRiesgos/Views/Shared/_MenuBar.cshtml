@@ -1,0 +1,52 @@
+﻿<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    <!-- Add icons to the links using the .nav-icon class
+    with font-awesome or any other icon font library menu-open-->
+    @if (Session["MenuMaster"] != null)
+    {
+        <li class="nav-item">
+            <a class="nav-link" name="Home" href="@Url.Action("Index", "Home")"><img src="~/Content/imganes/hoce-exterior.png" style="width:20px" />Inicio</a>
+        </li>
+        var MenuUsuario = (CapaModeloRBS.tbUsuario)Session["MenuMaster"];
+        foreach (var menuList in MenuUsuario.oListaMenu)
+        {
+
+            <li class="nav-item" style="font-size:14px">
+                <a href="#" class="nav-link active">
+                    <i>
+                        <img src="~/Content/imganes/folderFile.png" style="width:15px" />
+                    </i>
+                    <p>
+                        @menuList.NombreMenu
+                        <img class="right" src="~/Content/imganes/icons/icon-next.png" style="width:9px" />
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    @foreach (var subMenuList in menuList.oSubMenu)
+                    {
+                        <li class="nav-item" style="font-size:12px">
+                            <a href="@Url.Action(@subMenuList.Vista, @subMenuList.Controlador)" class="nav-link">
+                                <i>
+                                    @if (subMenuList.Controlador.Trim().ToUpper().IndexOf("Rep") > 0)
+                                    {
+                                        <img src="~/Content/imganes/1902.png" style="width:20px" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/Content/imganes/1902.png" style="width:20px" />
+                                    }
+                                </i>
+                                <p>@subMenuList.NombreSubMenu </p>
+                            </a>
+                        </li>
+
+                    }
+
+                </ul>
+            </li>
+
+        }
+        <li class="nav-item">
+            <a class="nav-link" name="Home" href="@Url.Action("Salir", "Home")"><img src="~/Content/imganes/salir-blanco.png" style="width:15px" /> Salir</a>
+        </li>
+    }
+</ul>
