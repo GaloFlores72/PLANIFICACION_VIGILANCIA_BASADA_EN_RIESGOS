@@ -428,7 +428,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
             return Json(new { resultado = respuesta }, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpPost]
+        [HttpGet]
         public JsonResult EliminarConstacion(int id)
         {
             bool respuesta = false;

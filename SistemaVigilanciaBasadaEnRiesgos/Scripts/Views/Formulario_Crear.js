@@ -107,13 +107,13 @@ function ConstatacionEliminar(_id) {
     }).then((result) => {
         if (result.isConfirmed) {
             jQuery.ajax({
-                type: "POST",
+                type: "GET",
                 url: $.MisUrls.url._EliminarConstacion,
                 data: { id: _id },
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (data) {
-                    if (resultado) {
+                    if (data.resultado) {
                         modalConstataciones(idOrientacion);
                     }
                 },
