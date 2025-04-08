@@ -6,6 +6,8 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace CapaDatosRBS
 {
@@ -182,6 +184,87 @@ namespace CapaDatosRBS
             }
             return respuesta;
         }
+
+        public tbPregunta ObtenerPreguntaPorId(int idPregunta)
+        {
+            tbPregunta oPregunta = null;
+
+            using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
+            {
+                SqlCommand cmd = new SqlCommand("usp_ObtenerPreguntaXml", oConexion);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@PreguntaID", idPregunta);
+
+                try
+                {
+                    oConexion.Open();
+
+                    using (XmlReader dr = cmd.ExecuteXmlReader())
+                    {
+                        while (dr.Read())
+                        {
+                            XDocument doc = XDocument.Load(dr);
+                            Console.WriteLine(doc.ToString()); // Para debug visual
+
+                            var nodoPregunta = doc.Root;
+                            if (nodoPregunta != null)
+                            {
+                                oPregunta = new tbPregunta
+                                {
+                                    PreguntaID = int.Parse(nodoPregunta.Element("PreguntaID")?.Value ?? "0"),
+                                    SubtituloID = int.Parse(nodoPregunta.Element("SubtituloID")?.Value ?? "0"),
+                                    Descripcion = nodoPregunta.Element("Descripcion")?.Value,
+                                    Referencia = nodoPregunta.Element("Referencia")?.Value,
+                                    Estado = nodoPregunta.Element("Estado")?.Value,
+                                    Estadisticas = int.TryParse(nodoPregunta.Element("Estadisticas")?.Value, out int est) ? est : 0,
+                                    CodigoPregunta = nodoPregunta.Element("CodigoPregunta")?.Value
+                                };
+
+                                var subtituloXml = nodoPregunta.Element("Subtitulo");
+                                if (subtituloXml != null)
+                                {
+                                    oPregunta.oSubtitulo = new tbSubtitulo
+                                    {
+                                        SubtituloID = int.Parse(subtituloXml.Element("SubtituloID")?.Value ?? "0"),
+                                        ListaID = int.Parse(subtituloXml.Element("ListaID")?.Value ?? "0"),
+                                        Nombre = subtituloXml.Element("Nombre")?.Value,
+                                        Descripcion = subtituloXml.Element("Descripcion")?.Value,
+                                        Estado = bool.TryParse(subtituloXml.Element("Estado")?.Value, out bool estadoSub) ? estadoSub : (bool?)null
+                                    };
+
+                                    var listaXml = subtituloXml.Element("ListaVerificacion");
+                                    if (listaXml != null)
+                                    {
+                                        oPregunta.oSubtitulo.oListaVerificacion = new tbListaDeVerificacion
+                                        {
+                                            ListaID = int.Parse(listaXml.Element("ListaID")?.Value ?? "0"),
+                                            Nombre = listaXml.Element("Nombre")?.Value,
+                                            Descripcion = listaXml.Element("Descripcion")?.Value,
+                                            FechaCreacion = DateTime.Parse(listaXml.Element("FechaCreacion")?.Value),
+                                            UsuarioCrea = listaXml.Element("UsuarioCrea")?.Value,
+                                            FechaModifica = DateTime.TryParse(listaXml.Element("FechaModifica")?.Value, out DateTime fechaMod) ? fechaMod : (DateTime?)null,
+                                            UsuarioModifica = listaXml.Element("UsuarioModifica")?.Value,
+                                            Estado = bool.TryParse(listaXml.Element("Estado")?.Value, out bool estadoLista) ? estadoLista : (bool?)null,
+                                            IdTipoProveedorServicio = int.TryParse(listaXml.Element("IdTipoProveedorServicio")?.Value, out int tipo) ? tipo : 0
+                                        };
+                                    }
+                                }
+                            }
+
+                            dr.Close();
+                        }
+
+                        return oPregunta;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error en ObtenerPreguntaPorId: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
 
     }
 }
