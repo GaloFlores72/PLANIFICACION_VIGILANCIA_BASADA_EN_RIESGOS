@@ -54,20 +54,25 @@ namespace CapaDatosRBS
                             Descripcion = reader.GetString(reader.GetOrdinal("Descripcion")),
                             Referencia = reader.GetString(reader.GetOrdinal("Referencia")),
                             Estado = reader.GetString(reader.GetOrdinal("Estado")),
-                            Estadisticas = reader.GetInt32(reader.GetOrdinal("Estadisticas"))
+                            Estadisticas = reader.GetInt32(reader.GetOrdinal("Estadisticas")),
+                            CodigoPregunta = reader.IsDBNull(reader.GetOrdinal("CodigoPregunta"))
+                                             ? null
+                                             : reader.GetString(reader.GetOrdinal("CodigoPregunta"))
                         });
                     }
-                    reader.Close();
 
+                    reader.Close();
                     return rptPregunta;
                 }
                 catch (Exception ex)
                 {
                     rptPregunta = null;
+                    Console.WriteLine("Error en ObtenerPreguntas: " + ex.Message);
                     return rptPregunta;
                 }
             }
         }
+
         public List<tbPregunta> ObtenerPreguntasPorSubtitulo(int subtituloID)
         {
             List<tbPregunta> preguntas = new List<tbPregunta>();
@@ -89,7 +94,8 @@ namespace CapaDatosRBS
                             Descripcion = reader.GetString(reader.GetOrdinal("Descripcion")),
                             Referencia = reader.IsDBNull(reader.GetOrdinal("Referencia")) ? null : reader.GetString(reader.GetOrdinal("Referencia")),
                             Estado = reader.GetString(reader.GetOrdinal("Estado")),
-                            Estadisticas = reader.IsDBNull(reader.GetOrdinal("Estadisticas")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("Estadisticas"))
+                            Estadisticas = reader.IsDBNull(reader.GetOrdinal("Estadisticas")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("Estadisticas")),
+                            CodigoPregunta = reader["CodigoPregunta"]?.ToString()
                         });
                     }
                 }
@@ -98,9 +104,10 @@ namespace CapaDatosRBS
             return preguntas;
         }
 
-        public bool RegistrarPregunta(tbPregunta opregunta)
+        public int RegistrarPregunta(tbPregunta opregunta)
         {
-            bool respuesta = false;
+            int resultado = 0;
+
             using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
             {
                 try
@@ -113,20 +120,24 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@Referencia", opregunta.Referencia);
                     cmd.Parameters.AddWithValue("@Estado", opregunta.Estado);
                     cmd.Parameters.AddWithValue("@Estadisticas", opregunta.Estadisticas);
-                    cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
+                    cmd.Parameters.AddWithValue("@CodigoPregunta", opregunta.CodigoPregunta);
+
+                    SqlParameter output = new SqlParameter("@Resultado", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                    cmd.Parameters.Add(output);
 
                     oConexion.Open();
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["@Resultado"].Value);
+                    resultado = Convert.ToInt32(output.Value);
                 }
                 catch (Exception ex)
                 {
-                    respuesta = false;
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("Error al registrar pregunta: " + ex.Message);
+                    resultado = 0;
                 }
             }
-            return respuesta;
+
+            return resultado;
         }
 
         public bool ModificarPregunta(tbPregunta objeto)
@@ -145,6 +156,7 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@Referencia", objeto.Referencia);
                     cmd.Parameters.AddWithValue("@Estado", objeto.Estado);
                     cmd.Parameters.AddWithValue("@Estadisticas", objeto.Estadisticas);
+                    cmd.Parameters.AddWithValue("@CodigoPregunta", objeto.CodigoPregunta);
                     cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
 
                     oConexion.Open();

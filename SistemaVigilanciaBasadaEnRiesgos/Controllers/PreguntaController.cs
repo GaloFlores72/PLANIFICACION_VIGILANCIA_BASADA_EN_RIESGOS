@@ -15,12 +15,6 @@
             {
                 return View();
             }
-            //Solo para pruebas
-            public ActionResult CrearPregunta2()
-            {
-                return View();
-            }
-
             [HttpGet]
             public JsonResult ObtenerPreguntas()
             {
@@ -36,23 +30,25 @@
                 return Json(new { data = preguntas }, JsonRequestBehavior.AllowGet);
             }
 
-            [HttpPost]
-            public JsonResult GuardarPregunta(tbPregunta objeto)
-            {
-                bool respuesta = true;
+        [HttpPost]
+        public JsonResult GuardarPregunta(tbPregunta objeto)
+        {
+            int resultado = 0;
 
-                if (objeto.PreguntaID == 0)
-                {
-                    respuesta = CD_Pregunta.Instancia.RegistrarPregunta(objeto);
-                }
-                else
-                {
-                    respuesta = CD_Pregunta.Instancia.ModificarPregunta(objeto);
-                }
-                return Json(new { resultado = respuesta }, JsonRequestBehavior.AllowGet);
+            if (objeto.PreguntaID == 0)
+            {
+                resultado = CD_Pregunta.Instancia.RegistrarPregunta(objeto);
+            }
+            else
+            {
+                resultado = CD_Pregunta.Instancia.ModificarPregunta(objeto) ? 1 : 0;
             }
 
-            public JsonResult EliminarPregunta(int id = 0)
+            return Json(new { resultado = resultado }, JsonRequestBehavior.AllowGet);
+        }
+
+
+        public JsonResult EliminarPregunta(int id = 0)
             {
                 bool respuesta = CD_Pregunta.Instancia.EliminarPregunta(id);
 
