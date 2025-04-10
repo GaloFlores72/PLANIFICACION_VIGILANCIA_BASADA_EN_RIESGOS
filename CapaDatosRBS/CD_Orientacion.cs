@@ -33,42 +33,6 @@ namespace CapaDatosRBS
             }
         }
 
-
-        //public List<tbOrientacion> ObtenerOrientacionesPorPreguntasPorIdPregunta(int ListaID)
-        //{
-        //    var preguntas = new List<tbOrientacion>();
-        //    string query = " SELECT ori.OrientacionID, ori.PreguntaID, ori.CodigoPeligro, ori.Nombre, ori.Descripcion " 
-        //        + " FROM Orientaciones ori "
-        //        + " inner join Preguntas pr on(pr.PreguntaID = ori.PreguntaID)" 
-        //        + " inner join Subtitulos st on(pr.SubtituloID = st.SubtituloID) "
-        //        + " inner join ListasDeVerificacion lv on(st.ListaID = lv.ListaID) "
-        //        + " where st.ListaID = @PreguntaID";
-        //    using (var connection = new SqlConnection(ConexionSqlServer.CN))
-        //    {
-        //        var command = new SqlCommand(query, connection);
-        //        command.Parameters.AddWithValue("@ListaID", ListaID);
-
-        //        connection.Open();
-        //        using (var reader = command.ExecuteReader())
-        //        {
-        //            while (reader.Read())
-        //            {
-        //                preguntas.Add(new tbOrientacion
-        //                {
-        //                    OrientacionID = reader.GetInt32(reader.GetOrdinal("OrientacionID")),
-        //                    PreguntaID = reader.GetInt32(reader.GetOrdinal("PreguntaID")),
-        //                    CodigoPeligro = reader.GetString(reader.GetOrdinal("CodigoPeligro")),
-        //                    Nombre  = reader.GetString(reader.GetOrdinal("Nombre")),
-        //                    Descripcion = reader.GetString(reader.GetOrdinal("Descripcion"))
-        //                });
-        //            }
-        //        }
-        //    }
-
-        //    return preguntas;
-        //}
-
-
         public List<tbOrientacion> ObtenerOrientacion()
         {
             List<tbOrientacion> rptOrientacion = new List<tbOrientacion>();
@@ -90,7 +54,8 @@ namespace CapaDatosRBS
                             PreguntaID = reader.GetInt32(reader.GetOrdinal("PreguntaID")),
                             CodigoPeligro = reader.GetString(reader.GetOrdinal("CodigoPeligro")),
                             Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                            Descripcion = reader.GetString(reader.GetOrdinal("Descripcion"))
+                            Descripcion = reader.GetString(reader.GetOrdinal("Descripcion")),
+                            CodigoOrientacion = reader.IsDBNull(reader.GetOrdinal("CodigoOrientacion")) ? null : reader.GetString(reader.GetOrdinal("CodigoOrientacion"))
                         });
                     }
                     reader.Close();
@@ -147,7 +112,7 @@ namespace CapaDatosRBS
             }
 
             var preguntas = new List<tbOrientacion>();
-            string query = "SELECT ori.OrientacionID, ori.PreguntaID, ori.CodigoPeligro, ori.Nombre, ori.Descripcion "
+            string query = "SELECT ori.OrientacionID, ori.PreguntaID, ori.CodigoPeligro, ori.Nombre, ori.Descripcion, ori.CodigoOrientacion "
                            + "FROM Orientaciones ori "
                            + "INNER JOIN Preguntas pr ON(pr.PreguntaID = ori.PreguntaID) "
                            + "INNER JOIN Subtitulos st ON(pr.SubtituloID = st.SubtituloID) "
@@ -172,7 +137,9 @@ namespace CapaDatosRBS
                                 PreguntaID = reader.GetInt32(reader.GetOrdinal("PreguntaID")),
                                 CodigoPeligro = reader.IsDBNull(reader.GetOrdinal("CodigoPeligro")) ? null : reader.GetString(reader.GetOrdinal("CodigoPeligro")),
                                 Nombre = reader.IsDBNull(reader.GetOrdinal("Nombre")) ? null : reader.GetString(reader.GetOrdinal("Nombre")),
-                                Descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString(reader.GetOrdinal("Descripcion"))
+                                Descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString(reader.GetOrdinal("Descripcion")),
+                                CodigoOrientacion = reader.IsDBNull(reader.GetOrdinal("CodigoOrientacion")) ? null : reader.GetString(reader.GetOrdinal("CodigoOrientacion"))
+
                             });
                         }
                     }
@@ -187,9 +154,9 @@ namespace CapaDatosRBS
             return preguntas;
         }
 
-        public bool RegistrarOrientacion(tbOrientacion orientacion)
+        public int RegistrarOrientacion(tbOrientacion orientacion)
         {
-            bool respuesta = false;
+            int resultado = 0;
             using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
             {
                 try
@@ -198,24 +165,26 @@ namespace CapaDatosRBS
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@PreguntaID", orientacion.PreguntaID);
-                    cmd.Parameters.AddWithValue("@CodigoPeligro", orientacion.CodigoPeligro);
+                    cmd.Parameters.AddWithValue("@CodigoPeligro", orientacion.CodigoPeligro ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Nombre", orientacion.Nombre);
-                    cmd.Parameters.AddWithValue("@Descripcion", orientacion.Descripcion);
-                    cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
+                    cmd.Parameters.AddWithValue("@Descripcion", orientacion.Descripcion ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@CodigoOrientacion", orientacion.CodigoOrientacion);
+                    cmd.Parameters.Add("@Resultado", SqlDbType.Int).Direction = ParameterDirection.Output;
 
                     oConexion.Open();
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["@Resultado"].Value);
+                    resultado = Convert.ToInt32(cmd.Parameters["@Resultado"].Value);
                 }
                 catch (Exception ex)
                 {
-                    respuesta = false;
-                    Console.WriteLine(ex.Message);
+                    resultado = 0;
+                    Console.WriteLine("Error al registrar orientación: " + ex.Message);
                 }
             }
-            return respuesta;
+            return resultado;
         }
+
 
         public bool ModificarOrientacion(tbOrientacion objeto)
         {
@@ -232,6 +201,7 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@CodigoPeligro", objeto.CodigoPeligro);
                     cmd.Parameters.AddWithValue("@Nombre", objeto.Nombre);
                     cmd.Parameters.AddWithValue("@Descripcion", objeto.Descripcion);
+                    cmd.Parameters.AddWithValue("@CodigoOrientacion", objeto.CodigoOrientacion);
                     cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
 
                     oConexion.Open();
@@ -345,6 +315,109 @@ namespace CapaDatosRBS
         private DateTime? ConvertirFecha(XElement elemento)
         {
             return DateTime.TryParse((string)elemento, out DateTime fecha) ? fecha : (DateTime?)null;
+        }
+
+        public tbOrientacion ObtenerOrientacionPorId(int orientacionID)
+        {
+            tbOrientacion oOrientacion = null;
+
+            using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
+            {
+                SqlCommand cmd = new SqlCommand("usp_ObtenerOrientacionXml", oConexion);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@OrientacionID", orientacionID);
+
+                try
+                {
+                    oConexion.Open();
+
+                    using (XmlReader dr = cmd.ExecuteXmlReader())
+                    {
+                        while (dr.Read())
+                        {
+                            XDocument doc = XDocument.Load(dr);
+
+                            // Paso 3: Validación del XML y visualización
+                            if (doc.Root == null)
+                            {
+                                Console.WriteLine("⚠️ El XML no tiene raíz. Posiblemente no se devolvió ningún dato.");
+                                return null;
+                            }
+
+                            Console.WriteLine("✅ XML recibido desde SQL:");
+                            Console.WriteLine(doc.ToString());
+
+                            var nodoOrientacion = doc.Root;
+                            if (nodoOrientacion != null)
+                            {
+                                oOrientacion = new tbOrientacion
+                                {
+                                    OrientacionID = int.Parse(nodoOrientacion.Element("OrientacionID")?.Value ?? "0"),
+                                    PreguntaID = int.Parse(nodoOrientacion.Element("PreguntaID")?.Value ?? "0"),
+                                    CodigoPeligro = nodoOrientacion.Element("CodigoPeligro")?.Value,
+                                    Nombre = nodoOrientacion.Element("Nombre")?.Value,
+                                    Descripcion = nodoOrientacion.Element("Descripcion")?.Value,
+                                    CodigoOrientacion = nodoOrientacion.Element("CodigoOrientacion")?.Value
+                                };
+
+                                var preguntaXML = nodoOrientacion.Element("Pregunta");
+                                if (preguntaXML != null)
+                                {
+                                    oOrientacion.oPregunta = new tbPregunta
+                                    {
+                                        PreguntaID = int.Parse(preguntaXML.Element("PreguntaID")?.Value ?? "0"),
+                                        SubtituloID = int.Parse(preguntaXML.Element("SubtituloID")?.Value ?? "0"),
+                                        Descripcion = preguntaXML.Element("Descripcion")?.Value,
+                                        Referencia = preguntaXML.Element("Referencia")?.Value,
+                                        Estado = preguntaXML.Element("Estado")?.Value,
+                                        Estadisticas = int.TryParse(preguntaXML.Element("Estadisticas")?.Value, out int est) ? est : 0,
+                                        CodigoPregunta = preguntaXML.Element("CodigoPregunta")?.Value
+                                    };
+
+                                    var subtituloXML = preguntaXML.Element("Subtitulo");
+                                    if (subtituloXML != null)
+                                    {
+                                        oOrientacion.oPregunta.oSubtitulo = new tbSubtitulo
+                                        {
+                                            SubtituloID = int.Parse(subtituloXML.Element("SubtituloID")?.Value ?? "0"),
+                                            ListaID = int.Parse(subtituloXML.Element("ListaID")?.Value ?? "0"),
+                                            Nombre = subtituloXML.Element("Nombre")?.Value,
+                                            Descripcion = subtituloXML.Element("Descripcion")?.Value,
+                                            Estado = bool.TryParse(subtituloXML.Element("Estado")?.Value, out bool estadoSub) ? estadoSub : (bool?)null
+                                        };
+
+                                        var listaXml = subtituloXML.Element("ListaVerificacion");
+                                        if (listaXml != null)
+                                        {
+                                            oOrientacion.oPregunta.oSubtitulo.oListaVerificacion = new tbListaDeVerificacion
+                                            {
+                                                ListaID = int.Parse(listaXml.Element("ListaID")?.Value ?? "0"),
+                                                Nombre = listaXml.Element("Nombre")?.Value,
+                                                Descripcion = listaXml.Element("Descripcion")?.Value,
+                                                FechaCreacion = DateTime.Parse(listaXml.Element("FechaCreacion")?.Value),
+                                                UsuarioCrea = listaXml.Element("UsuarioCrea")?.Value,
+                                                FechaModifica = DateTime.TryParse(listaXml.Element("FechaModifica")?.Value, out DateTime fechaMod) ? fechaMod : (DateTime?)null,
+                                                UsuarioModifica = listaXml.Element("UsuarioModifica")?.Value,
+                                                Estado = bool.TryParse(listaXml.Element("Estado")?.Value, out bool estadoLista) ? estadoLista : (bool?)null,
+                                                AreaID = int.Parse(listaXml.Element("AreaID")?.Value ?? "0"),
+                                                IdTipoProveedorServicio = int.TryParse(listaXml.Element("IdTipoProveedorServicio")?.Value, out int tipo) ? tipo : 0
+                                            };
+                                        }
+                                    }
+                                }
+                            }
+                            dr.Close();
+                        }
+
+                        return oOrientacion;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ Error en ObtenerOrientacionPorId: " + ex.Message);
+                    return null;
+                }
+            }
         }
 
     }

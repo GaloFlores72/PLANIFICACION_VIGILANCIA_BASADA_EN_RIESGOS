@@ -216,7 +216,7 @@ namespace CapaDatosRBS
                         while (dr.Read())
                         {
                             XDocument doc = XDocument.Load(dr);
-                            Console.WriteLine(doc.ToString()); // Para debug visual
+                            //Console.WriteLine(doc.ToString()); // Para debug visual
 
                             var nodoPregunta = doc.Root;
                             if (nodoPregunta != null)

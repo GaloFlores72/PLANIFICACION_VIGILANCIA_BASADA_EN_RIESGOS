@@ -13,9 +13,9 @@ namespace CapaModeloRBS
         public string CodigoPeligro { get; set; }
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
-
-        // Relación con OrientacionesEstados
+        public string CodigoOrientacion { get; set; }
         public List<tbOrientacionEstado> oOrientacionesEstados { get; set; } = new List<tbOrientacionEstado>();
         public List<tbConstatacion> oContataciones { get; set; } = new List<tbConstatacion>();
+        public tbPregunta oPregunta { get; set; }
     }
 }
