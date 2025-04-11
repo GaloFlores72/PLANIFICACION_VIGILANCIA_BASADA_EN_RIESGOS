@@ -200,6 +200,7 @@ function abrirPopUpForm(row) {
 
 function Guardar() {
     if (!$("#form").valid()) return;
+
     const subtituloID = $("#txtSubtituloID").val();
     const request = {
         SubtituloID: subtituloID,
@@ -209,6 +210,8 @@ function Guardar() {
         Estado: "No Satisfactorio",
         Estadisticas: 0
     };
+
+    // Si es edición, agregamos el ID
     if ($("#txtid").val() != "0") {
         request.PreguntaID = $("#txtid").val();
     }
@@ -223,19 +226,20 @@ function Guardar() {
                 const url = $.MisUrls.url._ObtenerPreguntasPorSubtitulo + '?SubtituloID=' + subtituloID;
                 tabladata.ajax.url(url).load();
                 $('#FormModal').modal('hide');
-                Swal.fire("¡Editado!", "Los cambios se guardaron correctamente", "success");
+                Swal.fire("¡Éxito!", "Los cambios se guardaron correctamente", "success");
             } else if (data.resultado === 2) {
-                Swal.fire("Duplicado", "Ya existe ese código de pregunta", "warning");
+                Swal.fire("Código duplicado", "Ya existe una pregunta con ese código en este subtítulo", "warning");
             } else {
-                Swal.fire("Error", "No se pudo guardar los cambios", "error");
+                Swal.fire("Error", "No se pudo guardar la pregunta", "error");
             }
         },
         error: function (error) {
-            console.log(error);
+            console.error(error);
             Swal.fire("Error", "Hubo un problema al guardar la pregunta", "error");
         }
     });
 }
+
 
 function eliminar(id) {
     Swal.fire({

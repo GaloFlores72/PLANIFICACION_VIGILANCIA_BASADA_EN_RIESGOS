@@ -140,9 +140,10 @@ namespace CapaDatosRBS
             return resultado;
         }
 
-        public bool ModificarPregunta(tbPregunta objeto)
+        public int ModificarPregunta(tbPregunta objeto)
         {
-            bool respuesta = true;
+            int resultado = 0;
+
             using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
             {
                 try
@@ -157,20 +158,24 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@Estado", objeto.Estado);
                     cmd.Parameters.AddWithValue("@Estadisticas", objeto.Estadisticas);
                     cmd.Parameters.AddWithValue("@CodigoPregunta", objeto.CodigoPregunta);
-                    cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
+
+                    cmd.Parameters.Add("@Resultado", SqlDbType.Int).Direction = ParameterDirection.Output;
 
                     oConexion.Open();
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["@Resultado"].Value);
+                    resultado = Convert.ToInt32(cmd.Parameters["@Resultado"].Value);
                 }
                 catch (Exception ex)
                 {
-                    respuesta = false;
+                    Console.WriteLine("Error al modificar la pregunta: " + ex.Message);
+                    resultado = 0;
                 }
             }
-            return respuesta;
+
+            return resultado; // 1 = éxito, 2 = duplicado, 0 = error
         }
+
 
         public bool EliminarPregunta(int preguntaID)
         {

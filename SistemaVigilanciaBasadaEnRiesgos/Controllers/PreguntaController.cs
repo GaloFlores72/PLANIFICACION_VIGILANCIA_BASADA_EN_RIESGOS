@@ -41,7 +41,7 @@
             }
             else
             {
-                resultado = CD_Pregunta.Instancia.ModificarPregunta(objeto) ? 1 : 0;
+                resultado = CD_Pregunta.Instancia.ModificarPregunta(objeto);
             }
 
             return Json(new { resultado = resultado }, JsonRequestBehavior.AllowGet);

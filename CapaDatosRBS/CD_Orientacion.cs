@@ -186,9 +186,9 @@ namespace CapaDatosRBS
         }
 
 
-        public bool ModificarOrientacion(tbOrientacion objeto)
+        public int ModificarOrientacion(tbOrientacion objeto)
         {
-            bool respuesta = true;
+            int resultado = 0;
             using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
             {
                 try
@@ -202,20 +202,21 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@Nombre", objeto.Nombre);
                     cmd.Parameters.AddWithValue("@Descripcion", objeto.Descripcion);
                     cmd.Parameters.AddWithValue("@CodigoOrientacion", objeto.CodigoOrientacion);
-                    cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("@Resultado", SqlDbType.Int).Direction = ParameterDirection.Output;
 
                     oConexion.Open();
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["@Resultado"].Value);
+                    resultado = Convert.ToInt32(cmd.Parameters["@Resultado"].Value);
                 }
                 catch (Exception ex)
                 {
-                    respuesta = false;
+                    resultado = 0; // Error
                 }
             }
-            return respuesta;
+            return resultado;
         }
+
 
         public bool EliminarOrientacion(int orientacionID)
         {
@@ -340,11 +341,11 @@ namespace CapaDatosRBS
                             // Paso 3: Validación del XML y visualización
                             if (doc.Root == null)
                             {
-                                Console.WriteLine("⚠️ El XML no tiene raíz. Posiblemente no se devolvió ningún dato.");
+                                Console.WriteLine("El XML no tiene raíz. Posiblemente no se devolvió ningún dato.");
                                 return null;
                             }
 
-                            Console.WriteLine("✅ XML recibido desde SQL:");
+                            Console.WriteLine("XML recibido desde SQL:");
                             Console.WriteLine(doc.ToString());
 
                             var nodoOrientacion = doc.Root;
@@ -414,7 +415,7 @@ namespace CapaDatosRBS
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("❌ Error en ObtenerOrientacionPorId: " + ex.Message);
+                    Console.WriteLine("Error en ObtenerOrientacionPorId: " + ex.Message);
                     return null;
                 }
             }

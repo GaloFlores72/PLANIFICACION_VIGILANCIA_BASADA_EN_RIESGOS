@@ -44,19 +44,16 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
 
             if (objeto.OrientacionID == 0)
             {
-                // Registro nuevo
                 resultado = CD_Orientacion.Instancia.RegistrarOrientacion(objeto);
-                // resultado = 1: éxito | 2: duplicado | 0: error
             }
             else
             {
-                // Modificación
-                bool actualizado = CD_Orientacion.Instancia.ModificarOrientacion(objeto);
-                resultado = actualizado ? 1 : 0;
+                resultado = CD_Orientacion.Instancia.ModificarOrientacion(objeto);
             }
 
             return Json(new { resultado = resultado }, JsonRequestBehavior.AllowGet);
         }
+
 
 
         public JsonResult EliminarOrientacion(int id = 0)
