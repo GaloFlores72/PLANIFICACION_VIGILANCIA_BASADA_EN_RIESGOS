@@ -19,10 +19,6 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
         {
             return View();
         }
-        public ActionResult CrearOrientacion2()
-        {
-            return View();
-        }
 
         [HttpGet]
         public JsonResult ObtenerOrientacion()

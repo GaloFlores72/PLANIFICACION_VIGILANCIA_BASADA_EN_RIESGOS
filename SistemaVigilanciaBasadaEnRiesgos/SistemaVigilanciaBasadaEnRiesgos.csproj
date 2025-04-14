@@ -2345,9 +2345,9 @@
     <Content Include="Scripts\Views\Lista_De_Verificacion_Crear.js" />
     <Content Include="Scripts\Views\Lista_Verificacion.js" />
     <Content Include="Scripts\Views\Lista_Verificacion_Crear.js" />
+    <Content Include="Scripts\Views\Login_Index.js" />
     <Content Include="Scripts\Views\OrientacionEstado_Crear.js" />
     <Content Include="Scripts\Views\Orientacion_Crear.js" />
-    <Content Include="Scripts\Views\Orientacion_Crear2.js" />
     <Content Include="Scripts\Views\Permisos_Crear.js" />
     <Content Include="Scripts\Views\Pregunta_Crear.js" />
     <Content Include="Scripts\Views\ProveedorServicio_Crear.js" />
@@ -2385,7 +2385,6 @@
     <Content Include="Views\TipoProveedorServicio\CrearTipoProveedor.cshtml" />
     <Content Include="Views\Pregunta\CrearPregunta.cshtml" />
     <Content Include="Views\Reporte\Superset.cshtml" />
-    <Content Include="Views\Orientaciones\CrearOrientacion2.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
