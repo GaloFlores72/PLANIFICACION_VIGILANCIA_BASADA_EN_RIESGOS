@@ -217,7 +217,14 @@
         $.MisUrls.urls({ _GuardarTipoProveedor: '@Url.Action("Guardar", "TipoProveedorServicio")' });
         $.MisUrls.urls({ _EliminarTipoProveedor: '@Url.Action("Eliminar", "TipoProveedorServicio")' });
 
-       
+        // ORGANIZACIONES
+        $.MisUrls.urls({ 
+            _ObtenerOrganizaciones: '@Url.Action("ObtenerOrganizaciones", "Organizaciones")',
+            _ObtenerOrganizacionPorId: '@Url.Action("ObtenerOrganizacionPorId", "Organizaciones")',
+            _GuardarOrganizacion: '@Url.Action("GuardarOrganizacion", "Organizaciones")',
+            _EliminarOrganizacion: '@Url.Action("EliminarOrganizacion", "Organizaciones")'
+        });
+
         function nobackbutton() {
             window.location.hash = "no-back-button";
             window.location.hash = "Again-No-back-button";//esta linea es necesaria para chrome
