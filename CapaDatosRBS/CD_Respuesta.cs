@@ -189,6 +189,7 @@ namespace CapaDatosRBS
                                                                                                RespuestaID = (int)respuesta.Element("RespuestaID"),
                                                                                                PreguntaID = (int)respuesta.Element("PreguntaID"),
                                                                                                SubtituloID = (int)respuesta.Element("SubtituloID"),
+                                                                                               CodigoPregunta = (string)respuesta.Element("CodigoPregunta"),
                                                                                                DescripcionPregunta = (string)respuesta.Element("DescripcionPregunta"),
                                                                                                ReferenciaPregunta = (string)respuesta.Element("ReferenciaPregunta"),
                                                                                                Estado = (string)respuesta.Element("Estado"),

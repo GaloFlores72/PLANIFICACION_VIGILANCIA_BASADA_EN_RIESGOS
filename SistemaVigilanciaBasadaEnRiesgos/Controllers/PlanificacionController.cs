@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using CapaDatosRBS;
 using CapaModeloRBS;
+using SistemaVigilanciaBasadaEnRiesgos.Utilidades;
 
 namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
 {
     public class PlanificacionController : Controller
     {
+        // Lista para mantener archivos en memoria
+        private static List<ArchivoPDF> ArchivosEnMemoria = new List<ArchivoPDF>();
         private static tbUsuario SesionUsuario;
 
         // GET: SeguridadOperacional
@@ -23,7 +27,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
 
         public ActionResult Crear()
         {
-            
+
             SesionUsuario = (tbUsuario)Session["Usuario"];
             List<tbRespuestaLV> olistaRespuesta = new List<tbRespuestaLV>();
 
@@ -94,7 +98,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
         }
 
         public ActionResult Formulario(int idResp, int idListaV)
-        {                       
+        {
             tbRespuesta oRespuesta = new tbRespuesta();
             int filaInsp = 0;
             string nombreInpector = string.Empty;
@@ -104,7 +108,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
 
             try
             {
-               
+
                 oRespuesta = CD_Respuesta.Instancia.ObtenerRespuestaPorId(idResp);
                 var listaArea = CD_Area.Instancia.ObtenerAreaPorPorOrganizacionIDXml(oRespuesta.OrganizacionID);
                 foreach (var item in oRespuesta.oInpectores)
@@ -117,7 +121,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                     else
                     {
                         oRespuesta.NombreInpectores = nombreInpector.ToUpper();
-                    }                    
+                    }
                     filaInsp++;
                     nombreInpector = string.Empty;
                 }
@@ -163,7 +167,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                 {
                     int idEstadoImpletscion = 0;
                     foreach (var item in oRespuestaOrientacion)
-                    {                       
+                    {
                         if (item.EstadoImplementacionID > idEstadoImpletscion)
                         {
                             idEstadoImpletscion = item.EstadoImplementacionID;
@@ -174,10 +178,10 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                     resupesta = CD_DetalleRespuestaLV.Instancia.ActualizaDetalleRespuestaEstado(detalleRespuestaId, nombreEstado, oEstadoDeImplementacion.Color);
 
                 }
-                
-                
-                
-                
+
+
+
+
             }
             return Json(new { resultado = resupesta, menssaje = estadoMensaje }, JsonRequestBehavior.AllowGet);
         }
@@ -185,7 +189,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
         private string retornaEstadoCumplimientoRequisito(tbOrientacionEstado oEstadoDeImplementacion)
         {
             string estadoCumplimiento = string.Empty;
-            if(oEstadoDeImplementacion.OrientacionEstadoID > 0)
+            if (oEstadoDeImplementacion.OrientacionEstadoID > 0)
             {
                 if (oEstadoDeImplementacion.oEstadoDeImplementacion.Descripcion.Contains("Implemen"))
                 {
@@ -208,7 +212,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
             {
                 estadoCumplimiento = "";
             }
-            
+
             return estadoCumplimiento;
         }
         public SelectList ToSelectListOrganizaciones()
@@ -354,11 +358,11 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
             {
                 oListConstataciones = CD_Constatacion.Instancia.ObtenerConstantacionPorOrientacionId(id);
             }
-            catch 
+            catch
             {
                 oListConstataciones = null;
             }
-            
+
 
             return Json(new { Data = oListConstataciones }, JsonRequestBehavior.AllowGet);
         }
@@ -366,24 +370,25 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
         [HttpGet]
         public JsonResult ObtenerConstantacionPorOrientacionId(int id = 0)
         {
-            tbOrientacion oOrientacion = new tbOrientacion();            
+            tbRespuestaOrientacion oRespuestaOrientacion = new tbRespuestaOrientacion();
             try
             {
-                oOrientacion = CD_Orientacion.Instancia.ObtieneOrientacionConstatacionesPororientacionId(id);
+                oRespuestaOrientacion = CD_Constatacion.Instancia.ObtenerDetalleRespuestaPorConstatacionPorId(id);
             }
             catch
             {
-                oOrientacion = null;
+                oRespuestaOrientacion = null;
             }
 
 
-            return Json(oOrientacion, JsonRequestBehavior.AllowGet);
+            return Json(oRespuestaOrientacion, JsonRequestBehavior.AllowGet);
         }
 
         [HttpGet]
         public JsonResult ObtenerOrientacionPorId(int id = 0)
         {
             tbConstatacion oConstatacion = new tbConstatacion();
+            ArchivosEnMemoria.Clear();
             try
             {
                 oConstatacion = CD_Constatacion.Instancia.ObtenerContatacionPorId(id);
@@ -403,6 +408,8 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
         public JsonResult GuardarConstacion(tbConstatacion objeto)
         {
             bool respuesta = false;
+            int idConstatacion = 0;
+           // List<tbEvidencia> oEvidencias = new List<tbEvidencia>();
             /*Nota de EstadoConstatacion
              * REGISTRADO
              * VALIDADO
@@ -411,18 +418,57 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
              * */
             if (Session["Usuario"] != null)
             {
+                int registro = ArchivosEnMemoria.Count;
+
                 SesionUsuario = (tbUsuario)Session["Usuario"];
                 if (objeto.ConstatacionID <= 0)
                 {
                     objeto.UsuarioCreaID = SesionUsuario.IdUsuario;
                     objeto.EstadoConstatacion = "REGISTRADO";
-                    CD_Constatacion.Instancia.RegistraConstacion(objeto);
-                    respuesta = true;
+                    idConstatacion = CD_Constatacion.Instancia.RegistraConstacion(objeto);
+                    if (idConstatacion > 0)
+                    {
+                        respuesta = true;
+                        foreach (var itemA in ArchivosEnMemoria)
+                        {
+                            var oevidencia = new tbEvidencia()
+                            {
+                                ConstatacionID = idConstatacion,
+                                EvidenciaID = -1,
+                                Descripcion = itemA.EvidenciaNombre,
+                                Path = itemA.Nombre,
+                                UsuarioCreaID = SesionUsuario.IdUsuario,
+                                UsuarioModificaID = SesionUsuario.IdUsuario
+                            };
+                            respuesta = CD_Evidencia.Instancia.RegistrarEvidencia(oevidencia);
+                        }
+                        ArchivosEnMemoria.Clear();
+                      
+                    }
+
                 }
                 else
                 {
                     objeto.UsuarioModificaID = SesionUsuario.IdUsuario;
                     respuesta = CD_Constatacion.Instancia.ModificaConstacion(objeto);
+                    if (respuesta)
+                    {
+                        foreach (var itemA in ArchivosEnMemoria)
+                        {
+                            var oevidencia = new tbEvidencia()
+                            {
+                                ConstatacionID = objeto.ConstatacionID,
+                                EvidenciaID = -1,
+                                Descripcion = itemA.EvidenciaNombre,
+                                Path = itemA.Nombre,
+                                UsuarioCreaID = SesionUsuario.IdUsuario,
+                                UsuarioModificaID = SesionUsuario.IdUsuario
+                            };
+                            respuesta = CD_Evidencia.Instancia.RegistrarEvidencia(oevidencia);
+                        }
+                        ArchivosEnMemoria.Clear();
+
+                    }
                 }
             }
             return Json(new { resultado = respuesta }, JsonRequestBehavior.AllowGet);
@@ -433,11 +479,59 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
         {
             bool respuesta = false;
             if (Session["Usuario"] != null)
-            {                
+            {
                 respuesta = CD_Constatacion.Instancia.EliminarConstacion(id);
-               
+
             }
             return Json(new { resultado = respuesta }, JsonRequestBehavior.AllowGet);
+        }
+
+        // Método para añadir archivo a la memoria
+        [HttpGet]
+        public JsonResult SubirArchivoMemoria1(HttpPostedFileBase archivo, string evidencia)
+        {
+            if (archivo != null && archivo.ContentLength > 0)
+            {
+                var memoryStream = new MemoryStream();
+                archivo.InputStream.CopyTo(memoryStream);
+
+                var archivoPDF = new ArchivoPDF
+                {
+                    Nombre = Path.GetFileName(archivo.FileName),
+                    Contenido = memoryStream.ToArray()
+                };
+
+                // Añadir a la lista en memoria
+                ArchivosEnMemoria.Add(archivoPDF);
+
+                return Json(new { success = true, mensaje = "Archivo agregado a memoria", archivosPendientes = ArchivosEnMemoria.Count });
+            }
+
+            return Json(new { success = false, mensaje = "Error al procesar archivo" }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public ActionResult SubirArchivoMemoria(HttpPostedFileBase archivo, string evidencia)
+        {
+            if (archivo != null && archivo.ContentLength > 0)
+            {
+                var memoryStream = new MemoryStream();
+                archivo.InputStream.CopyTo(memoryStream);
+
+                var archivoPDF = new ArchivoPDF
+                {
+                    EvidenciaNombre = evidencia,
+                    Nombre = Path.GetFileName(archivo.FileName),
+                    Contenido = memoryStream.ToArray()
+                };
+
+                // Añadir a la lista en memoria
+                ArchivosEnMemoria.Add(archivoPDF);
+
+                return Json(new { success = true, mensaje = "Archivo agregado a memoria", archivosPendientes = ArchivosEnMemoria.Count });
+            }
+
+            return Json(new { success = false, mensaje = "Error al procesar archivo" });
         }
 
 

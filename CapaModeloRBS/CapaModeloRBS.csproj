@@ -47,6 +47,7 @@
     <Compile Include="tbDetalleRespuesta.cs" />
     <Compile Include="tbDetalleRespuestaLV.cs" />
     <Compile Include="tbEstadoDeImplementacion.cs" />
+    <Compile Include="tbEvidencia.cs" />
     <Compile Include="tbListaDeVerificacion.cs" />
     <Compile Include="tbMenu.cs" />
     <Compile Include="tbOrientacion.cs" />

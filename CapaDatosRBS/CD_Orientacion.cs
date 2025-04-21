@@ -308,7 +308,7 @@ namespace CapaDatosRBS
                                                                    select new tbConstatacion
                                                                    {
                                                                        ConstatacionID = (int)constatacion.Element("ConstatacionID"),
-                                                                       OrientacionID = (int)constatacion.Element("OrientacionID"),
+                                                                       RespuestaOrientacionID = (int)constatacion.Element("RespuestaOrientacionID"),
                                                                        AreaID = (int)constatacion.Element("AreaID"),
                                                                        FechaConstatacion = (string)(constatacion.Element("FechaConstatacion")),
                                                                        PresuntaInfraccion = (bool)constatacion.Element("PresuntaInfraccion"),

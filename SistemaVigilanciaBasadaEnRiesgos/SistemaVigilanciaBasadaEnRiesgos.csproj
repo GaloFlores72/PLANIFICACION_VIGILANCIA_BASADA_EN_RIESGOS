@@ -139,6 +139,7 @@
     </Compile>
     <Compile Include="Helpers\Helpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilidades\ArchivoPDF.cs" />
     <Compile Include="Utilidades\Encriptar.cs" />
   </ItemGroup>
   <ItemGroup>
