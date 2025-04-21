@@ -72,6 +72,8 @@ function loadDataTableEvidencia() {
         language: {
             "url": $.MisUrls.url.Url_datatable_spanish
         },
+        lengthMenu: [3, 5, 10, 20, 50, 100],
+        pageLength: 3,
         paging: true,
         searching: true,
         ordering: true,
@@ -219,7 +221,7 @@ function formatearFechaFormato(fecha) {
 
 function modalConstatacionNuevo(id) {
     $('.tituloCostatlv').html($('#tituloListaVerificacion').text()); 
-    $("#tbEvidencia tbody").html("");
+    //$("#tbEvidencia tbody").html("");
     if (id > 0) {
 
         jQuery.ajax({
@@ -256,25 +258,17 @@ function modalConstatacionNuevo(id) {
                     $('#NotaAfectaSO').val(data.NotaAfectaSO);
                     //Carga lod datos de Evidencia a la tabla                  
 
+                    let tabla = $('#tbEvidencia').DataTable();
+                    tabla.clear().draw(); // Limpia la tabla existente
 
-
-
-
-                    if (data.oEvidencias.length === 0) {
-                        $("<tr>").append(
-                            $("<td colspan='3'>").text("No hay evidenvias")
-                        ).appendTo("#tbEvidencia tbody");
-                    } else {
-                        $.each(data.oEvidencias, function (index, item) {
-                            $("<tr>").append(
-                                $("<td>").text(item.Descripcion),
-                                $("<td>").text(item.Path),
-                                $("<td>").html('<button type="button" class="btn btn-secondary btn-sm" onclick="eliminarAdjunto(' + item.EvidenciaID +')"> Elimiar</button>')
-
-                            ).appendTo("#tbEvidencia tbody");
-                        });
-                    }
-
+                    $.each(data.oEvidencias, function (index, item) {
+                        // Convertir la fecha a formato legible                        
+                        tabla.row.add([
+                            item.Descripcion,
+                            item.Path,
+                            '<button type="button" class="btn btn-secondary btn-sm" onclick="eliminarAdjunto(' + item.EvidenciaID + ')"> Elimiar</button>'
+                        ]).draw(false);
+                    });
 
                     $('#EvidenviaNombre').val(null);
                     $('#EvidenciaArchivo').val(null);
@@ -442,9 +436,19 @@ function AgregarArchivoMemoria() {
         processData: false,
         success: function (result) {
             if (result.success) {
-                archivosLocales.push([fileInput.files[0].name, evidencia]);
-                actualizarListaArchivos();
-                $("#archivoPDF").val("");
+
+                let tabla = $('#tbEvidencia').DataTable();
+                tabla.clear().draw(); // Limpia la tabla existente
+
+                $.each(result.data, function (index, item) {
+                    // Convertir la fecha a formato legible                        
+                    tabla.row.add([
+                        item.EvidenciaNombre,
+                        item.Nombre,
+                        '<button type="button" class="btn btn-secondary btn-sm" onclick="eliminarAdjunto(' + -1 + ')"> Elimiar</button>'
+                    ]).draw(false);
+                });
+
             } else {
                 alert("Error: " + result.mensaje);
             }

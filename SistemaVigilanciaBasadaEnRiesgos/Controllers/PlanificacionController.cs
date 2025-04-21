@@ -392,6 +392,18 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
             try
             {
                 oConstatacion = CD_Constatacion.Instancia.ObtenerContatacionPorId(id);
+                foreach (var item in oConstatacion.oEvidencias)
+                {
+                    var archivoPDF = new ArchivoPDF
+                    {
+                        EvidenciaNombre = item.Descripcion,
+                        Nombre = item.Path,
+                        Contenido = null
+                    };
+
+                    // Añadir a la lista en memoria
+                    ArchivosEnMemoria.Add(archivoPDF);
+                }
             }
             catch
             {
@@ -431,16 +443,20 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                         respuesta = true;
                         foreach (var itemA in ArchivosEnMemoria)
                         {
-                            var oevidencia = new tbEvidencia()
+                            if (itemA.Contenido != null)
                             {
-                                ConstatacionID = idConstatacion,
-                                EvidenciaID = -1,
-                                Descripcion = itemA.EvidenciaNombre,
-                                Path = itemA.Nombre,
-                                UsuarioCreaID = SesionUsuario.IdUsuario,
-                                UsuarioModificaID = SesionUsuario.IdUsuario
-                            };
-                            respuesta = CD_Evidencia.Instancia.RegistrarEvidencia(oevidencia);
+                                var oevidencia = new tbEvidencia()
+                                {
+                                    ConstatacionID = idConstatacion,
+                                    EvidenciaID = -1,
+                                    Descripcion = itemA.EvidenciaNombre,
+                                    Path = itemA.Nombre,
+                                    UsuarioCreaID = SesionUsuario.IdUsuario,
+                                    UsuarioModificaID = SesionUsuario.IdUsuario
+                                };
+                                respuesta = CD_Evidencia.Instancia.RegistrarEvidencia(oevidencia);
+                            }
+                           
                         }
                         ArchivosEnMemoria.Clear();
                       
@@ -455,16 +471,20 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                     {
                         foreach (var itemA in ArchivosEnMemoria)
                         {
-                            var oevidencia = new tbEvidencia()
+                            if (itemA.Contenido != null)
                             {
-                                ConstatacionID = objeto.ConstatacionID,
-                                EvidenciaID = -1,
-                                Descripcion = itemA.EvidenciaNombre,
-                                Path = itemA.Nombre,
-                                UsuarioCreaID = SesionUsuario.IdUsuario,
-                                UsuarioModificaID = SesionUsuario.IdUsuario
-                            };
-                            respuesta = CD_Evidencia.Instancia.RegistrarEvidencia(oevidencia);
+                                var oevidencia = new tbEvidencia()
+                                {
+                                    ConstatacionID = objeto.ConstatacionID,
+                                    EvidenciaID = -1,
+                                    Descripcion = itemA.EvidenciaNombre,
+                                    Path = itemA.Nombre,
+                                    UsuarioCreaID = SesionUsuario.IdUsuario,
+                                    UsuarioModificaID = SesionUsuario.IdUsuario
+                                };
+                                respuesta = CD_Evidencia.Instancia.RegistrarEvidencia(oevidencia);
+                            }
+                                
                         }
                         ArchivosEnMemoria.Clear();
 
@@ -486,30 +506,6 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
             return Json(new { resultado = respuesta }, JsonRequestBehavior.AllowGet);
         }
 
-        // Método para añadir archivo a la memoria
-        [HttpGet]
-        public JsonResult SubirArchivoMemoria1(HttpPostedFileBase archivo, string evidencia)
-        {
-            if (archivo != null && archivo.ContentLength > 0)
-            {
-                var memoryStream = new MemoryStream();
-                archivo.InputStream.CopyTo(memoryStream);
-
-                var archivoPDF = new ArchivoPDF
-                {
-                    Nombre = Path.GetFileName(archivo.FileName),
-                    Contenido = memoryStream.ToArray()
-                };
-
-                // Añadir a la lista en memoria
-                ArchivosEnMemoria.Add(archivoPDF);
-
-                return Json(new { success = true, mensaje = "Archivo agregado a memoria", archivosPendientes = ArchivosEnMemoria.Count });
-            }
-
-            return Json(new { success = false, mensaje = "Error al procesar archivo" }, JsonRequestBehavior.AllowGet);
-        }
-
         [HttpPost]
         public ActionResult SubirArchivoMemoria(HttpPostedFileBase archivo, string evidencia)
         {
@@ -519,7 +515,7 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                 archivo.InputStream.CopyTo(memoryStream);
 
                 var archivoPDF = new ArchivoPDF
-                {
+                {                  
                     EvidenciaNombre = evidencia,
                     Nombre = Path.GetFileName(archivo.FileName),
                     Contenido = memoryStream.ToArray()
@@ -528,10 +524,10 @@ namespace SistemaVigilanciaBasadaEnRiesgos.Controllers
                 // Añadir a la lista en memoria
                 ArchivosEnMemoria.Add(archivoPDF);
 
-                return Json(new { success = true, mensaje = "Archivo agregado a memoria", archivosPendientes = ArchivosEnMemoria.Count });
+                return Json(new { success = true, mensaje = "Archivo agregado a memoria", data = ArchivosEnMemoria });
             }
 
-            return Json(new { success = false, mensaje = "Error al procesar archivo" });
+            return Json(new { success = false, mensaje = "Error al procesar archivo", data= ArchivosEnMemoria});
         }
 
 
