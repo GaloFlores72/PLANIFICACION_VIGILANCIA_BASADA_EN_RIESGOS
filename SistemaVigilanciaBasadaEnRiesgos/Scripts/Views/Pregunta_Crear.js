@@ -1,26 +1,31 @@
 ﻿var tabladata;
 
 $(document).ready(function () {
+    // Deshabilita el botón Agregar desde el inicio
+    $("#btnNuevo").prop("disabled", true);
     cargarListasDeVerificacion();
 
+    // Validación en tiempo real para CódigoPregunta (crear y editar)
+    $(document).on('input', '#crearCodigoPregunta, #txtCodigoPregunta', function () {
+        const valor = $(this).val();
+        const regex = /^[A-Z0-9\-]*$/;
+        if (!regex.test(valor)) {
+            Swal.fire("Carácter no permitido", "Solo se permiten letras Mayusculas, números y el guion (-). No se permiten espacios ni caracteres especiales.", "warning");
+            $(this).val(valor.replace(/[^A-Z0-9\-]/g, ''));
+        }
+    });
+
+    // Inicializa la tabla de preguntas
     tabladata = $('#tbdata').DataTable({
         "ajax": {
             "url": $.MisUrls.url._ObtenerPreguntas,
             "type": "GET",
-            "datatype": "json",
-            "data": function (d) {
-                var listaID = $("#ddlListas").val();
-                if (listaID) {
-                    d.listaID = listaID;
-                }
-            }
+            "datatype": "json"
         },
         "columns": [
             { "data": "Referencia" },
             { "data": "Descripcion" },
-            {
-                "data": "Estado"
-            },
+            { "data": "CodigoPregunta" },
             {
                 "data": "PreguntaID", "render": function (data, type, row, meta) {
                     return "<button class='btn btn-primary btn-sm' type='button' onclick='abrirPopUpForm(" + JSON.stringify(row) + ")'><i class='fas fa-pen'></i></button>" +
@@ -37,162 +42,227 @@ $(document).ready(function () {
         responsive: true
     });
 
+    // Carga subtítulos cuando se selecciona una lista
     $("#ddlListas").change(function () {
         var listaID = $(this).val();
+        $("#btnNuevo").prop("disabled", true);
+
         if (listaID) {
-            tabladata.ajax.url($.MisUrls.url._ObtenerPreguntas + "?ListaID=" + listaID).load();
+            $("#ddlSubtitulos").prop("disabled", false);
             cargarSubtitulos(listaID);
         } else {
-            tabladata.ajax.url($.MisUrls.url._ObtenerPreguntas).load();
+            $("#ddlSubtitulos").prop("disabled", true);
+            $("#ddlSubtitulos").empty().append('<option value="">-- Seleccione un subtítulo --</option>');
         }
     });
 
+    // Desactiva el botón Agregar cuando cambia subtítulo
     $("#ddlSubtitulos").change(function () {
-        var subtituloID = $(this).val();
-        if (subtituloID) {
-            tabladata.ajax.url($.MisUrls.url._ObtenerPreguntasPorSubtitulo + "?subtituloID=" + subtituloID).load();
-        }
-        console.log(subtituloID);
+        $("#btnNuevo").prop("disabled", true);
     });
 
-});
+    // Buscar preguntas por subtítulo
+    $("#btnBuscar").click(function () {
+        const listaID = $("#ddlListas").val();
+        const subtituloID = $("#ddlSubtitulos").val();
 
+        if (!listaID || !subtituloID) {
+            Swal.fire("Atención", "Debe seleccionar Lista y Subtítulo", "warning");
+            return;
+        }
+
+        const nuevaUrl = $.MisUrls.url._ObtenerPreguntasPorSubtitulo + `?SubtituloID=${subtituloID}`;
+        tabladata.ajax.url(nuevaUrl).load();
+        $("#btnNuevo").prop("disabled", false);
+    });
+});
 
 function cargarListasDeVerificacion() {
     $.ajax({
         url: $.MisUrls.url._ObtenerListaVerificacionTodos,
         type: 'GET',
         success: function (response) {
-            var ddl = $("#ddlListas");
-            ddl.empty();
-            ddl.append('<option value="">-- Seleccione una lista de verificación --</option>');
-
-            $.each(response.data, function (index, item) {
-                ddl.append('<option value="' + item.ListaID + '" data-nombre="' + item.Nombre + '">' + item.Nombre + '</option>');
+            const ddl = $("#ddlListas");
+            ddl.empty().append('<option value="">-- Seleccione una lista --</option>');
+            $.each(response.data, function (i, item) {
+                ddl.append(`<option value="${item.ListaID}" data-nombre="${item.Nombre}">${item.Nombre}</option>`);
             });
         },
         error: function (err) {
-            console.error("Error al cargar las listas de verificación:", err);
+            console.error("Error al cargar listas:", err);
         }
     });
 }
 
 function cargarSubtitulos(listaID) {
-    if (!listaID) {
-        console.error("ListaID no está definido.");
-        return;
-    }
-
-    $("#ddlSubtitulos").empty();
-    $("#ddlSubtitulos").append('<option value="">-- Seleccione un subtítulo --</option>');
-    $("#ddlSubtitulos").prop("disabled", false);
+    if (!listaID) return;
+    const ddl = $("#ddlSubtitulos");
+    ddl.empty().append('<option value="">-- Seleccione un subtítulo --</option>').prop("disabled", false);
 
     $.ajax({
         url: $.MisUrls.url._ObtenerSubtitulosPorListaId,
         type: 'GET',
         data: { ListaID: listaID },
         success: function (response) {
-            if (response.data && response.data.length > 0) {
-                $.each(response.data, function (index, item) {
-                    $("#ddlSubtitulos").append('<option value="' + item.SubtituloID + '" data-nombre="' + item.Nombre + '">' + item.Nombre + '</option>');
-                });
+            $.each(response.data, function (i, item) {
+                ddl.append(`<option value="${item.SubtituloID}" data-nombre="${item.Nombre}">${item.Nombre}</option>`);
+            });
+        },
+        error: function (err) {
+            console.error("Error al cargar subtítulos:", err);
+        }
+    });
+}
+
+function abrirModalCrearPregunta() {
+    $("#crearListaNombre").val($("#ddlListas option:selected").text());
+    $("#crearSubtituloNombre").val($("#ddlSubtitulos option:selected").text());
+    $("#crearSubtituloID").val($("#ddlSubtitulos").val());
+    $("#crearDescripcion, #crearReferencia, #crearCodigoPregunta").val("");
+    $("#ModalCrearPregunta").modal("show");
+}
+
+function guardarNuevaPregunta() {
+    const subtituloID = $("#crearSubtituloID").val();
+    const descripcion = $("#crearDescripcion").val();
+    const referencia = $("#crearReferencia").val();
+    const codigo = $("#crearCodigoPregunta").val();
+
+    if (!subtituloID || !codigo) {
+        Swal.fire("Error", "Debe ingresar código y seleccionar subtítulo", "error");
+        return;
+    }
+
+    const request = {
+        SubtituloID: subtituloID,
+        Descripcion: descripcion,
+        Referencia: referencia,
+        Estado: "No Satisfactorio",
+        Estadisticas: 0,
+        CodigoPregunta: codigo
+    };
+
+    $.ajax({
+        url: $.MisUrls.url._GuardarPregunta,
+        type: "POST",
+        data: JSON.stringify(request),
+        contentType: "application/json",
+        success: function (data) {
+            if (data.resultado === 1) {
+                const url = $.MisUrls.url._ObtenerPreguntasPorSubtitulo + "?SubtituloID=" + subtituloID;
+                tabladata.ajax.url(url).load();
+                $("#ModalCrearPregunta").modal("hide");
+                Swal.fire("¡Éxito!", "Pregunta guardada correctamente", "success");
+            } else if (data.resultado === 2) {
+                Swal.fire("Duplicado", "Ya existe ese código de pregunta", "warning");
             } else {
-                console.error("No se encontraron subtítulos.");
+                Swal.fire("Error", "No se pudo guardar", "error");
             }
         },
+        error: function (error) {
+            console.error(error);
+            Swal.fire("Error", "Error al guardar", "error");
+        }
+    });
+}
+
+function abrirPopUpForm(row) {
+    const idPregunta = row.PreguntaID;
+    $.ajax({
+        url: $.MisUrls.url._ObtenerPreguntaPorId,
+        type: 'GET',
+        data: { idPregunta: idPregunta },
+        success: function (response) {
+            const pregunta = response.data;
+            if (!pregunta) {
+                Swal.fire("Error", "No se pudo cargar la información", "error");
+                return;
+            }
+            $("#txtid").val(pregunta.PreguntaID);
+            $("#txtSubtituloID").val(pregunta.SubtituloID);
+            $("#txtDescripcion").val(pregunta.Descripcion);
+            $("#txtReferencia").val(pregunta.Referencia);
+            $("#txtCodigoPregunta").val(pregunta.CodigoPregunta);
+            if (pregunta.oSubtitulo) {
+                $("#txtSubtituloNombre").val(pregunta.oSubtitulo.Nombre);
+                if (pregunta.oSubtitulo.oListaVerificacion) {
+                    $("#txtListaNombre").val(pregunta.oSubtitulo.oListaVerificacion.Nombre);
+                }
+            }
+            $('#FormModal').modal('show');
+        },
+        error: function (err) {
+            console.error(err);
+            Swal.fire("Error", "Error al obtener los datos", "error");
+        }
+    });
+}
+
+function Guardar() {
+    if (!$("#form").valid()) return;
+
+    const subtituloID = $("#txtSubtituloID").val();
+    const request = {
+        SubtituloID: subtituloID,
+        Descripcion: $("#txtDescripcion").val(),
+        Referencia: $("#txtReferencia").val(),
+        CodigoPregunta: $("#txtCodigoPregunta").val(),
+        Estado: "No Satisfactorio",
+        Estadisticas: 0
+    };
+
+    // Si es edición, agregamos el ID
+    if ($("#txtid").val() != "0") {
+        request.PreguntaID = $("#txtid").val();
+    }
+
+    $.ajax({
+        url: $.MisUrls.url._GuardarPregunta,
+        type: "POST",
+        data: JSON.stringify(request),
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            if (data.resultado === 1) {
+                const url = $.MisUrls.url._ObtenerPreguntasPorSubtitulo + '?SubtituloID=' + subtituloID;
+                tabladata.ajax.url(url).load();
+                $('#FormModal').modal('hide');
+                Swal.fire("¡Éxito!", "Los cambios se guardaron correctamente", "success");
+            } else if (data.resultado === 2) {
+                Swal.fire("Código duplicado", "Ya existe una pregunta con ese código en este subtítulo", "warning");
+            } else {
+                Swal.fire("Error", "No se pudo guardar la pregunta", "error");
+            }
+        },
+        error: function (error) {
+            console.error(error);
+            Swal.fire("Error", "Hubo un problema al guardar la pregunta", "error");
+        }
     });
 }
 
 
-function abrirPopUpForm(json) {
-    $("#txtid").val(0);
-
-    if (json != null) {
-        $("#txtid").val(json.PreguntaID);
-        var subtituloID = json.SubtituloID;
-        $("#txtSubtituloID").val(subtituloID);
-        $("#txtDescripcion").val(json.Descripcion);
-        $("#txtReferencia").val(json.Referencia);
-        $("#txtEstadisticas").val(json.Estadisticas);
-        $("#cboEstado").val(json.Estado);
-    } else {
-        var subtituloID = $("#ddlSubtitulos").val();
-        $("#txtSubtituloID").val(subtituloID);
-        $("#txtDescripcion").val("");
-        $("#txtReferencia").val("");
-        $("#txtEstadisticas").val("");
-        $("#cboEstado").val("");
-    }
-
-    $('#FormModal').modal('show');
-}
-
-
-function Guardar() {
-    if ($("#form").valid()) {
-        var subtituloID = $("#txtSubtituloID").val()
-
-        var request = {
-            subtituloID: subtituloID,
-            Descripcion: $("#txtDescripcion").val(),
-            Referencia: $("#txtReferencia").val(),
-            Estadisticas: $("#txtEstadisticas").val(),
-            Estado: $("#cboEstado").val()
-        };
-
-        if ($("#txtid").val() != "0") {
-            request.PreguntaID = $("#txtid").val();
-        }
-
-        jQuery.ajax({
-            url: $.MisUrls.url._GuardarPregunta,
-            type: "POST",
-            data: JSON.stringify(request),
-            dataType: "json",
-            contentType: "application/json; charset=utf-8",
-            success: function (data) {
-                console.log(data);
-                if (data.resultado) {
-                    var url = $.MisUrls.url._ObtenerPreguntasPorSubtitulo + '?SubtituloID=' + subtituloID;
-                    tabladata.ajax.url(url).load();
-                    $('#FormModal').modal('hide');
-                } else {
-                    Swal.fire("Pregunta", "No se pudo guardar los cambios", "warning");
-                }
-            },
-            error: function (error) {
-                console.log(error);
-                Swal.fire("Error", "Hubo un problema al guardar pregunta", "error");
-            }
-        });
-    }
-}
-
-function eliminar($id) {
+function eliminar(id) {
     Swal.fire({
         title: "Preguntas",
         text: "¿Desea eliminar el registro seleccionado?",
-        type: "warning",
+        icon: "warning",
         showDenyButton: true,
-        showCancelButton: false,
         confirmButtonText: "SI",
         denyButtonText: "NO"
     }).then((result) => {
         if (result.isConfirmed) {
-            jQuery.ajax({
-                url: $.MisUrls.url._EliminarPregunta + "?id=" + $id,
+            $.ajax({
+                url: $.MisUrls.url._EliminarPregunta + "?id=" + id,
                 type: "GET",
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
                 success: function (data) {
                     if (data.resultado) {
                         tabladata.ajax.reload();
                     } else {
-                        Swal.fire("Mensaje", "No se pudo eliminar el subtitulo", "warning")
+                        Swal.fire("Mensaje", "No se pudo eliminar el registro", "warning");
                     }
                 },
                 error: function (error) {
-                    console.log(error)
+                    console.log(error);
                 }
             });
         }
