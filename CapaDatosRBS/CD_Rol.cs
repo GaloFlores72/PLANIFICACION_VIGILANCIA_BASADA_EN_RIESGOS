@@ -14,10 +14,7 @@ namespace CapaDatosRBS
         public static CD_Rol _instancia = null;
 
         private CD_Rol()
-        {
-
-        }
-
+        { }
         public static CD_Rol Instancia
         {
             get

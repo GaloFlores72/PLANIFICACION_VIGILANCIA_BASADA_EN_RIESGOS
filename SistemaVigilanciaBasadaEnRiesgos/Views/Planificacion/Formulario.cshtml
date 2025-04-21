@@ -43,7 +43,7 @@
                                 <div class="col-sm-12 col-md-12">
                                     <div class="color-palette-set text-center" style="background-color:#c2bebe">
                                         <div> <h5> SISTEMA REGIONAL DE COOPERACIÓN PARA LA VIGILANCIA DE LA SEGURIDAD OPERACIONAL</h5></div>
-                                        <div><strong>@Model.NombreLista &nbsp; @Model.DescripcionLista</strong></div>
+                                        <div><strong id="tituloListaVerificacion">@Model.NombreLista &nbsp; @Model.DescripcionLista</strong></div>
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-12">
@@ -190,7 +190,7 @@
                                                                 @Html.TextBoxFor(model => @itemP.oRespuestaOrientacion.First().Comentario, new { @class = "form-control form-control-sm text-uppercase", autocomplete = "off", maxlength = "500" })
                                                                 <div class="input-group-append">
                                                                     <div class="btn waves-effect waves-light btn-outline-primary btn-sm">
-                                                                        <i onclick="modalConstataciones(@itemP.oRespuestaOrientacion.First().OrientacionID)"><img src="~/Content/imganes/procesoAutHabilita.png" style="width:15px" /></i>
+                                                                        <i onclick="modalConstataciones(@itemP.oRespuestaOrientacion.First().RespuestaOrientacionID)"><img src="~/Content/imganes/procesoAutHabilita.png" style="width:15px" /></i>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -240,7 +240,7 @@
                                                                         @Html.TextBoxFor(model => @itemO.Comentario, new { @class = "form-control form-control-sm text-uppercase", autocomplete = "off", maxlength = "500" })
                                                                         <div class="input-group-append">
                                                                             <div class="btn waves-effect waves-light btn-outline-primary btn-sm">
-                                                                                <i onclick="modalConstataciones(@itemO.OrientacionID)"><img src="~/Content/imganes/procesoAutHabilita.png" style="width:15px" /></i>
+                                                                                <i onclick="modalConstataciones(@itemO.RespuestaOrientacionID)"><img src="~/Content/imganes/procesoAutHabilita.png" style="width:15px" /></i>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -265,27 +265,35 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <form enctype="multipart/form-data">
-                    <div class="modal-header">
-                        <input id="OOrientacionID" name="COrientacionID" type="hidden" value="Value">
+                    <input type="hidden" id="cRespuestaOrientacionID"/>
+                    <div class="modal-header">                        
                         <table class="table table-striped table-bordered table-sm table-responsive-sm" style="width:100%">
                             <tr>
-                                <td colspan="2" class="text-blue">DETALLE DE CONSTATACIONES</td>
+                                <th colspan="2" class="text-center text-blue">C O N S T A T A C I O N E S</th>
                             </tr>
                             <tr>
-                                <td class="col-sm-2">
-                                    <label for="orientacionExamen" class="col-form-label">Orientación</label>
-                                </td>
-                                <td class="col-sm-10">
-                                    <textarea class="form-control" id="orientacionExamen" rows="4"></textarea>
-                                </td>
+                                <th>Lista verificación</th>
+                                <th class="text-center">
+                                    <strong class="tituloCostatlv"></strong>
+                                </th>
                             </tr>
                             <tr>
-                                <td class="col-sm-2">
-                                    <label for="codigoPeligro" class="col-form-label">Código de peligro</label>
-                                </td>
-                                <td class="col-sm-10">
-                                    <input type="text" class="form-control" id="codigoPeligro" readonly="readonly">
-                                </td>
+                                <th>SubTitulo: </th>
+                                <th class="text-blue">
+                                    <input type="text" class="form-control text-center" id="cnombreSubtitulo" readonly="readonly">
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>Pregunta: </th>
+                                <th class="text-blue">
+                                    <textarea class="form-control" id="cDescripcionPregunta" rows="2" readonly></textarea>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>Orientación: </th>
+                                <th class="text-blue">
+                                    <textarea class="form-control" id="cDescripcionOrientacion" rows="4" readonly></textarea>
+                                </th>
                             </tr>
                         </table>
                     </div>
@@ -325,98 +333,145 @@
             <div class="modal-content">
                 <form enctype="multipart/form-data">
                     <div class="modal-header">
-                        <h6 class="modal-title text-primary text-center">Constatación</h6>
+                        <table class="table table-striped table-bordered table-sm nowrap compact" style="width:100%">
+                            <tr>
+                                <th colspan="2" class="text-center text-blue">C O N S T A T A C I O N E S</th>
+                            </tr>
+                            <tr>
+                                <th>Lista verificación: </th>
+                                <th class="text-center">
+                                    <strong class="tituloCostatlv"></strong>                                    
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>SubTitulo: </th>
+                                <th class="text-center">
+                                    <input type="text" class="form-control form-control-sm text-center" id="tcnombreSubtitulo" readonly="readonly">
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>Pregunta: </th>
+                                <th class="text-center">
+                                    <textarea class="form-control form-control-sm" id="tcDescripcionPregunta" rows="2" readonly></textarea>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>Orientación: </th>
+                                <th class="text-center">
+                                    <textarea class="form-control form-control-sm" id="tcDescripcionOrientacion" rows="3" readonly></textarea>
+                                </th>
+                            </tr>
+                        </table>
+                       
                     </div>
-                    <div class="modal-body" style="font-size:14px">
-                        <div class="card-body">
-                            <input id="ConstatacionID" name="ConstatacionID" type="hidden" value="Value">
-                            <input id="COrientacionID" name="COrientacionID" type="hidden" value="Value">
+                    <div class="modal-body" style="font-size:12px">
+                        <div style="height: 500px">
+                            <div class="row overflow-hidden">
+                                <div class="col-12 h-100">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <input id="ConstatacionID" name="ConstatacionID" type="hidden" value="Value">
+                                            <input id="cRespuestaOrientacionID" name="cRespuestaOrientacionID" type="hidden" value="Value">
+                                            <div class="form-horizontal">
+                                                <div class="form-group row">
+                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">Area</label>
+                                                    <div class="col-sm-9">
+                                                        @if (ViewBag.ListaAreas != null)
+                                                        {
+                                                            @Html.DropDownList("AreaID", new SelectList(ViewBag.ListaAreas, "Value", "Text"), new { @class = "form-control" })
+                                                        }
 
-                            <div class="form-horizontal">
-                                <div class="form-group row">
-                                    <label for="inputEmail3" class="col-sm-3 col-form-label">Area</label>
-                                    <div class="col-sm-9">
-                                        @if (ViewBag.ListaAreas != null)
-                                        {
-                                            @Html.DropDownList("AreaID", new SelectList(ViewBag.ListaAreas, "Value", "Text"), new { @class = "form-control" })
-                                        }
-
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="FechaConstatacion" class="col-sm-3 col-form-label">Fecha</label>
-                                    <div class="col-sm-9">
-                                        <input type="date" class="form-control" id="FechaConstatacion">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="PresuntaInfraccion" class="col-sm-3 col-form-label">Presunta infracción</label>
-                                    <div class="col-sm-9">
-                                        <div class="custom-control custom-checkbox">
-                                            <input class="custom-control-input" type="checkbox" id="PresuntaInfraccion">
-                                            <label for="PresuntaInfraccion" class="custom-control-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="DescripcionConstatacion" class="col-sm-3 col-form-label">Descripción constatación</label>
-                                    <div class="col-sm-9">
-                                        <textarea class="form-control" id="DescripcionConstatacion" rows="3" placeholder="Descripción constatación"></textarea>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="EvidenviaNombre" class="col-sm-3 col-form-label">Evidencia</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control " id="EvidenviaNombre">
-                                    </div>
-                                    <div class="custom-file col-sm-4">
-                                        <input type="file" class="custom-file-input custom-select-sm" id="EvidenciaArchivo">
-                                        <label class="custom-file-label col-form-label-sm" for="EvidenciaArchivo">Evidencia archivo</label>
-                                    </div>
-                                    <button class="btn btn-outline-primary btn-sm"> + </button>
-                                </div>
-                               
-                                <div class="form-group row">
-                                    <div class="col-sm-12">
-                                        <table id="tbEvidencia" class="table table-striped table-bordered table-sm nowrap compact" style="width:100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Oid</th>
-                                                    <th>Nombre</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="AfectaSO" class="col-sm-3 col-form-label">Afecta S.O</label>
-                                    <div class="col-sm-9">
-                                        <div class="custom-control custom-checkbox">
-                                            <input class="custom-control-input" type="checkbox" id="AfectaSO">
-                                            <label for="AfectaSO" class="custom-control-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="NotaAfectaSO" class="col-sm-3 col-form-label">Nota afecta S.O</label>
-                                    <div class="col-sm-9">
-                                        <textarea class="form-control" id="NotaAfectaSO" rows="3" placeholder="Nota afecta S.O"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="FechaConstatacion" class="col-sm-3 col-form-label">Fecha</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="date" class="form-control" id="FechaConstatacion">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="PresuntaInfraccion" class="col-sm-3 col-form-label">Presunta infracción</label>
+                                                    <div class="col-sm-9">
+                                                        <div class="custom-control custom-checkbox">
+                                                            <input class="custom-control-input" type="checkbox" id="PresuntaInfraccion">
+                                                            <label for="PresuntaInfraccion" class="custom-control-label"></label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="DescripcionConstatacion" class="col-sm-3 col-form-label">Descripción constatación</label>
+                                                    <div class="col-sm-9">
+                                                        <textarea class="form-control" id="DescripcionConstatacion" rows="3" placeholder="Descripción constatación"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="EvidenviaNombre" class="col-sm-3 col-form-label">Evidencia</label>
+                                                    <div class="col-sm-4">
+                                                        <input type="text" class="form-control " id="EvidenviaNombre">
+                                                    </div>
+                                                    <div class="custom-file col-sm-4">
+                                                        <input type="file" class="custom-file-input custom-select-sm" id="EvidenciaArchivo">
+                                                        <label class="custom-file-label col-form-label-sm" for="EvidenciaArchivo">Evidencia archivo</label>
+                                                    </div>
+                                                    <button type="button" id="btnAgregarArchivoMemoria" class="btn btn-outline-primary btn-sm" onclick="AgregarArchivoMemoria()"> + Agergar </button>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-12">
+                                                        <div class="panel panel-default">
+                                                            <div class="panel-heading">Adjuntos de evidencia</div>
+                                                            <div class="panel-body">
+                                                                <ul id="listaArchivos" class="list-group">
+                                                                    <!-- Aquí se mostrarán los archivos añadidos -->
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-sm-12">
+                                                        <table id="tbEvidencia" class="table table-striped table-bordered table-sm nowrap compact" style="width:100%">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Evidencia</th>
+                                                                    <th>Archivo</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody></tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="AfectaSO" class="col-sm-3 col-form-label">Afecta S.O</label>
+                                                    <div class="col-sm-9">
+                                                        <div class="custom-control custom-checkbox">
+                                                            <input class="custom-control-input" type="checkbox" id="AfectaSO">
+                                                            <label for="AfectaSO" class="custom-control-label"></label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="NotaAfectaSO" class="col-sm-3 col-form-label">Nota afecta S.O</label>
+                                                    <div class="col-sm-9">
+                                                        <textarea class="form-control" id="NotaAfectaSO" rows="3" placeholder="Nota afecta S.O"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <div class="float-left">
+                                                    <div id="loadImagenEnviar" style="display: none;">
+                                                        <img src="~/Content/imganes/loadingHorizontal.gif" />
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-danger btn-sm col-sm-3" onclick='salirConstatacion()'><img src="~/Content/imganes/cancel.png" style="width:30px" /> Salir</button>
+                                                <button class='btn btn-primary btn-sm col-sm-3' type='button' id="btnGrabarAeronave" onclick='grabarContatacion()'> <i><img src="~/Content/imganes/save.png" style="width:30px" />  Grabar</i> </button>
+                                            </div>
+                                        </div>   
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <div class="float-left">
-                                <div id="loadImagenEnviar" style="display: none;">
-                                    <img src="~/Content/imganes/loadingHorizontal.gif" />
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-danger btn-sm col-sm-3" onclick='salirConstatacion()'><img src="~/Content/imganes/cancel.png" style="width:30px" /> Salir</button>
-                            <button class='btn btn-primary btn-sm col-sm-3' type='button' id="btnGrabarAeronave" onclick='grabarContatacion()'> <i><img src="~/Content/imganes/save.png" style="width:30px" />  Grabar</i> </button>
-
-                        </div>
+                        </div>   
+                        
                     </div>
 
                 </form>

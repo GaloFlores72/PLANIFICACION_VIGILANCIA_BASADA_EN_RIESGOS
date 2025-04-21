@@ -1,6 +1,7 @@
 ﻿//var table = $('#tablaLV').DataTable(); // Inicializa DataTables
+// Array local para mantener registro de archivos
+var archivosLocales = [];
 $(document).ready(function () {
-
     $('#OrganizacionID').on('change', function () {
         var _oid = $(this).val();
         $.get($.MisUrls.url._ObtieneOrganizacionPorOid, { Id: _oid }, function (data) {
@@ -52,8 +53,10 @@ $(document).ready(function () {
 
 })
 
+//function 
 function modalConstataciones(_id) {
     if (_id > 0) {
+        $('.tituloCostatlv').html($('#tituloListaVerificacion').text()); 
         jQuery.ajax({
             type: "GET",
             url: $.MisUrls.url._ObtenerConstantacionPorOrientacionId,
@@ -62,12 +65,18 @@ function modalConstataciones(_id) {
             dataType: "json",
             success: function (data) {
                 if (data != undefined && data != null) {
-                    $("#orientacionExamen").val(data.Descripcion);
-                    $("#codigoPeligro").val(data.CodigoPeligro);
-                    $("#OOrientacionID").val(data.OrientacionID);  
-                    $('#COrientacionID').val(data.OrientacionID);
+                    $("#cRespuestaOrientacionID").val(data.oDetalleRespuesta.RespuestaOrientacionID);
+                    $("#cnombreSubtitulo").val(data.oDetalleRespuesta.NombreSubtitulo);
+                    $("#cDescripcionPregunta").val(data.oDetalleRespuesta.CodigoPregunta + " " + data.oDetalleRespuesta.DescripcionPregunta);
+                    $("#cDescripcionOrientacion").val(data.DescripcionOrientacion);
+
+                    $("#tcnombreSubtitulo").val(data.oDetalleRespuesta.NombreSubtitulo);
+                    $("#tcDescripcionPregunta").val(data.oDetalleRespuesta.CodigoPregunta + " " + data.oDetalleRespuesta.DescripcionPregunta);
+                    $("#tcDescripcionOrientacion").val(data.DescripcionOrientacion);
+                    $("#cRespuestaOrientacionID").val(data.RespuestaOrientacionID);                   
+
                     $("#tbConstataciones tbody").html("");
-                    $.each(data.oContataciones, function (i, row) {
+                    $.each(data.oConstatacion, function (i, row) {
                         // Convertir la fecha a formato legible
                         let fechaFormateada = formatearFecha(row["FechaConstatacion"]);
                         $("<tr>").append(
@@ -107,16 +116,19 @@ function ConstatacionEliminar(_id) {
     }).then((result) => {
         if (result.isConfirmed) {
             jQuery.ajax({
-                type: "POST",
+                type: "GET",
                 url: $.MisUrls.url._EliminarConstacion,
                 data: { id: _id },
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (data) {
-                    if (resultado) {
-                        modalConstataciones(idOrientacion);
+                    if (data.resultado) {
+                        var idcRespuestaOri = $("#cRespuestaOrientacionID").val();
+                        modalConstataciones(idcRespuestaOri);
                     }
-
+                    else {
+                        MensajeIco("Constatación", "No se pudo eliminar el registro de constatación", "error");
+                    }
                 },
                 failure: function (response) {
                     MensajeIco("Constatación", response.responseText, "error");
@@ -165,7 +177,10 @@ function formatearFechaFormato(fecha) {
 }
 
 function modalConstatacionNuevo(id) {
-    if (id > 0) {        
+    $('.tituloCostatlv').html($('#tituloListaVerificacion').text()); 
+    $("#tbEvidencia tbody").html("");
+    if (id > 0) {
+
         jQuery.ajax({
             type: "GET",
             url: $.MisUrls.url._ObtenerOrientacionPorId,
@@ -179,13 +194,46 @@ function modalConstatacionNuevo(id) {
                     $('#COrientacionID').val(data.OrientacionID);
                     $('#AreaID').val(data.AreaID);
                     $('#FechaConstatacion').val(fehaConstatacion);
-                    $("#PresuntaInfraccion").prop("checked")
+                    var valor = 0;
+                    valor = data.PresuntaInfraccion == true ? 1 : 0
+                    if (valor == 0) {
+                        $("#PresuntaInfraccion").prop("checked", false)
+                    }
+                    else {
+                        $("#PresuntaInfraccion").prop("checked", true)
+                    }
+
                     $('#DescripcionConstatacion').val(data.DescripcionConstatacion);
-                    $("#AfectaSO").prop("checked")
+                    var valorInf = 0;
+                    valorInf = data.AfectaSO == true ? 1 : 0
+                    if (valorInf == 0) {
+                        $("#AfectaSO").prop("checked", false)
+                    }
+                    else {
+                        $("#AfectaSO").prop("checked", true)
+                    }
                     $('#NotaAfectaSO').val(data.NotaAfectaSO);
+                    //Carga lod datos de Evidencia a la tabla                  
+                   
+                    if (data.oEvidencias.length === 0) {
+                        $("<tr>").append(
+                            $("<td colspan='3'>").text("No hay evidenvias")
+                        ).appendTo("#tbEvidencia tbody");
+                    } else {
+                        $.each(data.oEvidencias, function (index, item) {
+                            $("<tr>").append(
+                                $("<td>").text(item.Descripcion),
+                                $("<td>").text(item.Path),
+                                $("<td>").html('<button type="button" class="btn btn-secondary btn-sm" onclick="eliminarAdjunto(' + item.EvidenciaID +')"> Elimiar</button>')
+
+                            ).appendTo("#tbEvidencia tbody");
+                        });
+                    }
+
+
                     $('#EvidenviaNombre').val(null);
                     $('#EvidenciaArchivo').val(null);
-                    $("#tbEvidencia tbody").html(""); 
+                    //$("#tbEvidencia tbody").html(""); 
                 }
 
             },
@@ -217,6 +265,7 @@ function camposCostatacionCambiaColor() {
     $("#DescripcionConstatacion").removeClass("border-danger");
     $('#NotaAfectaSO').removeClass("border-danger");
 }
+
 function validaCamposConstatacion() {
     camposCostatacionCambiaColor();
     var _AreaID = $('#AreaID').val();
@@ -253,21 +302,34 @@ function validaCamposConstatacion() {
 
     return true;
 }
+
+function limpiaRegistrosConstatacion() {
+$('#ConstatacionID').val(-1);
+    $('#cRespuestaOrientacionID').val(0);
+    $('#AreaID').val(0);
+    $('#FechaConstatacion').val('');
+    $("#PresuntaInfraccion").prop("checked", false)    
+    $('#DescripcionConstatacion').val('');
+    $('#EvidenviaNombre').val('');
+    $("#AfectaSO").prop("checked", false)        
+    $('#NotaAfectaSO').val('');
+}
 function grabarContatacion() {
     if (validaCamposConstatacion()) {
         var _constatacionID = $('#ConstatacionID').val();
-        var _cOrientacionID = $('#COrientacionID').val();
+        var _cRespuestaOrientacionID = $('#cRespuestaOrientacionID').val();
         var _areaID = $('#AreaID').val();
         var _fechaConstatacion = $('#FechaConstatacion').val();
         var _presuntaInfraccion = $("#PresuntaInfraccion").prop("checked")
         var _descripcionConstatacion = $('#DescripcionConstatacion').val();
+        var _evidenviaNombre = $('#EvidenviaNombre').val();
         var _afectaSO = $("#AfectaSO").prop("checked")
         var _notaAfectaSO = $('#NotaAfectaSO').val();
 
         var request = {
             objeto: {
                 ConstatacionID: parseInt(_constatacionID),
-                OrientacionID: parseInt(_cOrientacionID),
+                RespuestaOrientacionID: parseInt(_cRespuestaOrientacionID),
                 AreaID: parseInt(_areaID),
                 FechaConstatacion: _fechaConstatacion,
                 PresuntaInfraccion: _presuntaInfraccion,
@@ -285,9 +347,10 @@ function grabarContatacion() {
             contentType: "application/json; charset=utf-8",
             success: function (data) {
                 if (data.resultado) {
-                    //tabladata.ajax.reload();
+                    archivosLocales = [];
                     salirConstatacion();
-                    modalConstataciones(_cOrientacionID);
+                    modalConstataciones(_cRespuestaOrientacionID);
+                    limpiaRegistrosConstatacion();
                 } else {
                     MensajeIco("Mensaje", "No se pudo guardar los cambios", "warning")
                 }
@@ -302,6 +365,94 @@ function grabarContatacion() {
     }
 }
 
+function AgregarArchivoMemoria() {
+    var indexA = "0";
+    var evidencia = $("#EvidenviaNombre").val();
+    var fileInput = $("#EvidenciaArchivo")[0];
+
+    if (fileInput.files.length === 0) {
+        alert("Por favor selecciona un archivo PDF");
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append("archivo", fileInput.files[0]);
+
+    var fileInput = $("#EvidenciaArchivo")[0];
+
+    if (fileInput.files.length === 0) {
+        alert("Por favor selecciona un archivo PDF");
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append("archivo", fileInput.files[0]);
+    formData.append("evidencia", evidencia);
+
+    $.ajax({
+        url: $.MisUrls.url._SubirArchivoMemoria,
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function (result) {
+            if (result.success) {
+                archivosLocales.push([fileInput.files[0].name, evidencia]);
+                actualizarListaArchivos();
+                $("#archivoPDF").val("");
+            } else {
+                alert("Error: " + result.mensaje);
+            }
+        },
+        error: function () {
+            alert("Error al procesar la solicitud");
+        }
+    });
+}
+// Función para actualizar la lista de archivos
+function actualizarListaArchivos() {
+    var lista = $("#listaArchivos");
+    lista.empty();
+    
+    //Carga en la tabla de lista 
+    $("#tbEvidencia tbody").html("");
+    if (archivosLocales.length === 0) {
+        $("<tr>").append(
+            $("<td colspan='2'>").text("No hay archivos")
+        ).appendTo("#tbEvidencia tbody");
+    } else {
+        archivosLocales.forEach(function ([nombre, evidencia]) {
+            $("<tr>").append(
+                $("<td>").text(evidencia),
+                $("<td>").text(nombre),              
+                $("<td>").html('<button type="button" class="btn btn-secondary btn-sm" onclick="eliminarAdjunto(-1)"> Elimiar</button>')
+
+            ).appendTo("#tbEvidencia tbody");
+        });
+    }
+
+}
+
+function eliminarAdjunto(id) {
+
+    if (id != null) {
+        Swal.fire({
+            title: 'Mensaje',
+            html: "¿Desea eliminar el archivo seleccionado?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#C5C7CF',
+            confirmButtonText: 'Si',
+            cancelButtonText: "No",
+        }).then((result) => {
+            if (result.isConfirmed) {
+               
+            }
+        })
+    }
+    
+}
 function filtrarTabla() {
 
     let input = $("#buscar").val().toLowerCase(); // Obtener texto de búsqueda

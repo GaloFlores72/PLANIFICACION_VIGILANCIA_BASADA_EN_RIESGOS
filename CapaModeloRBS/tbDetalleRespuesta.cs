@@ -22,6 +22,8 @@ namespace CapaModeloRBS
         public DateTime FechaCreacion { get; set; }
         public string UsuarioModifica { get; set; }
         public DateTime FechaModifica { get; set; }
-       public List<tbRespuestaOrientacion> oRespuestaOrientacion { get; set; } = new List<tbRespuestaOrientacion>();
+        public string CodigoPregunta { get; set; }
+
+        public List<tbRespuestaOrientacion> oRespuestaOrientacion { get; set; } = new List<tbRespuestaOrientacion>();
     }
 }

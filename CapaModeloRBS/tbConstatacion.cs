@@ -9,7 +9,7 @@ namespace CapaModeloRBS
     public class tbConstatacion
     {
         public int ConstatacionID { get; set; }
-        public int OrientacionID { get; set; }
+        public int RespuestaOrientacionID { get; set; }
         public int AreaID { get; set; }
         public string FechaConstatacion { get; set; }
         public bool? PresuntaInfraccion { get; set; }
@@ -25,6 +25,7 @@ namespace CapaModeloRBS
         public int UsuarioEnvioId { get; set; }
         public string ObservacionConstatacion { get; set; }
         public tbArea oArea { get; set; } = new tbArea();
-        public tbOrientacion oOrientacion { get; set; } = new tbOrientacion();
+        public List<tbEvidencia> oEvidencias { get; set; }
+        
     }
 }

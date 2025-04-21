@@ -46,6 +46,7 @@
     <Compile Include="CD_Constatacion.cs" />
     <Compile Include="CD_DetalleRespuestaLV.cs" />
     <Compile Include="CD_EstadosDeImplementacion.cs" />
+    <Compile Include="CD_Evidencia.cs" />
     <Compile Include="CD_ListaDeVerificacion.cs" />
     <Compile Include="CD_Organizacion.cs" />
     <Compile Include="CD_Orientacion.cs" />

@@ -20,6 +20,8 @@ namespace CapaModeloRBS
         public DateTime FechaModifica { get; set; }
         public string CodigoPeligro { get; set; }
         public string DescripcionOrientacion { get; set; }
+        public tbDetalleRespuesta oDetalleRespuesta { get; set; }
+        public List<tbConstatacion> oConstatacion { get; set; }
         public List<tbOrientacionEstado> oOrientacionEstado { get; set; } = new List<tbOrientacionEstado>();
     }
 }
