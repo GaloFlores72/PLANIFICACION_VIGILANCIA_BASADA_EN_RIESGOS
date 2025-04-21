@@ -2,6 +2,8 @@
 // Array local para mantener registro de archivos
 var archivosLocales = [];
 $(document).ready(function () {
+    loadDataTable();
+    loadDataTableEvidencia();
     $('#OrganizacionID').on('change', function () {
         var _oid = $(this).val();
         $.get($.MisUrls.url._ObtieneOrganizacionPorOid, { Id: _oid }, function (data) {
@@ -53,7 +55,30 @@ $(document).ready(function () {
 
 })
 
-//function 
+function loadDataTable() {
+    $('#tbConstataciones').DataTable({
+        language: {
+            "url": $.MisUrls.url.Url_datatable_spanish
+        },
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true
+    });
+}
+
+function loadDataTableEvidencia() {
+    $('#tbEvidencia').DataTable({
+        language: {
+            "url": $.MisUrls.url.Url_datatable_spanish
+        },
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true
+    });
+}
+
 function modalConstataciones(_id) {
     if (_id > 0) {
         $('.tituloCostatlv').html($('#tituloListaVerificacion').text()); 
@@ -75,7 +100,22 @@ function modalConstataciones(_id) {
                     $("#tcDescripcionOrientacion").val(data.DescripcionOrientacion);
                     $("#cRespuestaOrientacionID").val(data.RespuestaOrientacionID);                   
 
-                    $("#tbConstataciones tbody").html("");
+                    let tabla = $('#tbConstataciones').DataTable();
+                    tabla.clear().draw(); // Limpia la tabla existente
+
+                    $.each(data.oConstatacion, function (index, item) {
+                        // Convertir la fecha a formato legible
+                        let fechaFormateada = formatearFecha(item.FechaConstatacion);
+                        tabla.row.add([
+                            item.ConstatacionID,
+                            item.oArea.Nombre,
+                            item.DescripcionConstatacion,
+                            fechaFormateada,
+                            '<button type="button" class="btn btn-secondary btn-sm" onclick="modalConstatacionNuevo(' + item.ConstatacionID + ')">Editar</button>'
+                        ]).draw(false);
+                    });
+
+                    /*$("#tbConstataciones tbody").html("");
                     $.each(data.oConstatacion, function (i, row) {
                         // Convertir la fecha a formato legible
                         let fechaFormateada = formatearFecha(row["FechaConstatacion"]);
@@ -86,7 +126,8 @@ function modalConstataciones(_id) {
                             $("<td>").text(fechaFormateada),
                             $("<td class'text-center'>").html('<a href="#" class="btn btn-bottom btn-sm btn-outline-primary" onclick="modalConstatacionNuevo(' + row["ConstatacionID"] + ')">Editar</a>  <a href="#" class="btn btn-outline-danger btn-sm" onclick="ConstatacionEliminar(' + row["ConstatacionID"] +')">Eliminar</a>')
                         ).appendTo("#tbConstataciones tbody");
-                    })
+                    })*/
+
                     $('#modalConstataciones').modal('show');
                 }
                 
@@ -214,7 +255,11 @@ function modalConstatacionNuevo(id) {
                     }
                     $('#NotaAfectaSO').val(data.NotaAfectaSO);
                     //Carga lod datos de Evidencia a la tabla                  
-                   
+
+
+
+
+
                     if (data.oEvidencias.length === 0) {
                         $("<tr>").append(
                             $("<td colspan='3'>").text("No hay evidenvias")
