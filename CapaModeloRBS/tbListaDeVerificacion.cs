@@ -13,7 +13,7 @@ namespace CapaModeloRBS
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
         public bool? Estado { get; set; }
-        public DateTime FechaCreacion { get; set; }
+        public DateTime? FechaCreacion { get; set; }
         public string UsuarioCrea { get; set; }
         public DateTime? FechaModifica { get; set; }
         public string UsuarioModifica { get; set; }
@@ -22,6 +22,6 @@ namespace CapaModeloRBS
         public tbTipoProveedorServicio oTipoProveedorServicio { get; set; } = new tbTipoProveedorServicio();
         // Relación con Subtitulos
         public List<tbSubtitulo> oSubtitulos { get; set; } = new List<tbSubtitulo>();
-
+        public int AreaID { get; set; }
     }
 }

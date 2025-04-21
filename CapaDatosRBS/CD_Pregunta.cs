@@ -6,6 +6,8 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace CapaDatosRBS
 {
@@ -52,20 +54,25 @@ namespace CapaDatosRBS
                             Descripcion = reader.GetString(reader.GetOrdinal("Descripcion")),
                             Referencia = reader.GetString(reader.GetOrdinal("Referencia")),
                             Estado = reader.GetString(reader.GetOrdinal("Estado")),
-                            Estadisticas = reader.GetInt32(reader.GetOrdinal("Estadisticas"))
+                            Estadisticas = reader.GetInt32(reader.GetOrdinal("Estadisticas")),
+                            CodigoPregunta = reader.IsDBNull(reader.GetOrdinal("CodigoPregunta"))
+                                             ? null
+                                             : reader.GetString(reader.GetOrdinal("CodigoPregunta"))
                         });
                     }
-                    reader.Close();
 
+                    reader.Close();
                     return rptPregunta;
                 }
                 catch (Exception ex)
                 {
                     rptPregunta = null;
+                    Console.WriteLine("Error en ObtenerPreguntas: " + ex.Message);
                     return rptPregunta;
                 }
             }
         }
+
         public List<tbPregunta> ObtenerPreguntasPorSubtitulo(int subtituloID)
         {
             List<tbPregunta> preguntas = new List<tbPregunta>();
@@ -87,7 +94,8 @@ namespace CapaDatosRBS
                             Descripcion = reader.GetString(reader.GetOrdinal("Descripcion")),
                             Referencia = reader.IsDBNull(reader.GetOrdinal("Referencia")) ? null : reader.GetString(reader.GetOrdinal("Referencia")),
                             Estado = reader.GetString(reader.GetOrdinal("Estado")),
-                            Estadisticas = reader.IsDBNull(reader.GetOrdinal("Estadisticas")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("Estadisticas"))
+                            Estadisticas = reader.IsDBNull(reader.GetOrdinal("Estadisticas")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("Estadisticas")),
+                            CodigoPregunta = reader["CodigoPregunta"]?.ToString()
                         });
                     }
                 }
@@ -96,9 +104,10 @@ namespace CapaDatosRBS
             return preguntas;
         }
 
-        public bool RegistrarPregunta(tbPregunta opregunta)
+        public int RegistrarPregunta(tbPregunta opregunta)
         {
-            bool respuesta = false;
+            int resultado = 0;
+
             using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
             {
                 try
@@ -111,25 +120,30 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@Referencia", opregunta.Referencia);
                     cmd.Parameters.AddWithValue("@Estado", opregunta.Estado);
                     cmd.Parameters.AddWithValue("@Estadisticas", opregunta.Estadisticas);
-                    cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
+                    cmd.Parameters.AddWithValue("@CodigoPregunta", opregunta.CodigoPregunta);
+
+                    SqlParameter output = new SqlParameter("@Resultado", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                    cmd.Parameters.Add(output);
 
                     oConexion.Open();
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["@Resultado"].Value);
+                    resultado = Convert.ToInt32(output.Value);
                 }
                 catch (Exception ex)
                 {
-                    respuesta = false;
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("Error al registrar pregunta: " + ex.Message);
+                    resultado = 0;
                 }
             }
-            return respuesta;
+
+            return resultado;
         }
 
-        public bool ModificarPregunta(tbPregunta objeto)
+        public int ModificarPregunta(tbPregunta objeto)
         {
-            bool respuesta = true;
+            int resultado = 0;
+
             using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
             {
                 try
@@ -143,20 +157,25 @@ namespace CapaDatosRBS
                     cmd.Parameters.AddWithValue("@Referencia", objeto.Referencia);
                     cmd.Parameters.AddWithValue("@Estado", objeto.Estado);
                     cmd.Parameters.AddWithValue("@Estadisticas", objeto.Estadisticas);
-                    cmd.Parameters.Add("@Resultado", SqlDbType.Bit).Direction = ParameterDirection.Output;
+                    cmd.Parameters.AddWithValue("@CodigoPregunta", objeto.CodigoPregunta);
+
+                    cmd.Parameters.Add("@Resultado", SqlDbType.Int).Direction = ParameterDirection.Output;
 
                     oConexion.Open();
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["@Resultado"].Value);
+                    resultado = Convert.ToInt32(cmd.Parameters["@Resultado"].Value);
                 }
                 catch (Exception ex)
                 {
-                    respuesta = false;
+                    Console.WriteLine("Error al modificar la pregunta: " + ex.Message);
+                    resultado = 0;
                 }
             }
-            return respuesta;
+
+            return resultado; // 1 = éxito, 2 = duplicado, 0 = error
         }
+
 
         public bool EliminarPregunta(int preguntaID)
         {
@@ -182,6 +201,87 @@ namespace CapaDatosRBS
             }
             return respuesta;
         }
+
+        public tbPregunta ObtenerPreguntaPorId(int idPregunta)
+        {
+            tbPregunta oPregunta = null;
+
+            using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
+            {
+                SqlCommand cmd = new SqlCommand("usp_ObtenerPreguntaXml", oConexion);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@PreguntaID", idPregunta);
+
+                try
+                {
+                    oConexion.Open();
+
+                    using (XmlReader dr = cmd.ExecuteXmlReader())
+                    {
+                        while (dr.Read())
+                        {
+                            XDocument doc = XDocument.Load(dr);
+                            //Console.WriteLine(doc.ToString()); // Para debug visual
+
+                            var nodoPregunta = doc.Root;
+                            if (nodoPregunta != null)
+                            {
+                                oPregunta = new tbPregunta
+                                {
+                                    PreguntaID = int.Parse(nodoPregunta.Element("PreguntaID")?.Value ?? "0"),
+                                    SubtituloID = int.Parse(nodoPregunta.Element("SubtituloID")?.Value ?? "0"),
+                                    Descripcion = nodoPregunta.Element("Descripcion")?.Value,
+                                    Referencia = nodoPregunta.Element("Referencia")?.Value,
+                                    Estado = nodoPregunta.Element("Estado")?.Value,
+                                    Estadisticas = int.TryParse(nodoPregunta.Element("Estadisticas")?.Value, out int est) ? est : 0,
+                                    CodigoPregunta = nodoPregunta.Element("CodigoPregunta")?.Value
+                                };
+
+                                var subtituloXml = nodoPregunta.Element("Subtitulo");
+                                if (subtituloXml != null)
+                                {
+                                    oPregunta.oSubtitulo = new tbSubtitulo
+                                    {
+                                        SubtituloID = int.Parse(subtituloXml.Element("SubtituloID")?.Value ?? "0"),
+                                        ListaID = int.Parse(subtituloXml.Element("ListaID")?.Value ?? "0"),
+                                        Nombre = subtituloXml.Element("Nombre")?.Value,
+                                        Descripcion = subtituloXml.Element("Descripcion")?.Value,
+                                        Estado = bool.TryParse(subtituloXml.Element("Estado")?.Value, out bool estadoSub) ? estadoSub : (bool?)null
+                                    };
+
+                                    var listaXml = subtituloXml.Element("ListaVerificacion");
+                                    if (listaXml != null)
+                                    {
+                                        oPregunta.oSubtitulo.oListaVerificacion = new tbListaDeVerificacion
+                                        {
+                                            ListaID = int.Parse(listaXml.Element("ListaID")?.Value ?? "0"),
+                                            Nombre = listaXml.Element("Nombre")?.Value,
+                                            Descripcion = listaXml.Element("Descripcion")?.Value,
+                                            FechaCreacion = DateTime.Parse(listaXml.Element("FechaCreacion")?.Value),
+                                            UsuarioCrea = listaXml.Element("UsuarioCrea")?.Value,
+                                            FechaModifica = DateTime.TryParse(listaXml.Element("FechaModifica")?.Value, out DateTime fechaMod) ? fechaMod : (DateTime?)null,
+                                            UsuarioModifica = listaXml.Element("UsuarioModifica")?.Value,
+                                            Estado = bool.TryParse(listaXml.Element("Estado")?.Value, out bool estadoLista) ? estadoLista : (bool?)null,
+                                            IdTipoProveedorServicio = int.TryParse(listaXml.Element("IdTipoProveedorServicio")?.Value, out int tipo) ? tipo : 0
+                                        };
+                                    }
+                                }
+                            }
+
+                            dr.Close();
+                        }
+
+                        return oPregunta;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error en ObtenerPreguntaPorId: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
 
     }
 }

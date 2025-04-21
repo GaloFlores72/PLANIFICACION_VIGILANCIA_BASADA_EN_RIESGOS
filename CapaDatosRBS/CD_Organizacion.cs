@@ -54,7 +54,8 @@ namespace CapaDatosRBS
                             OrganizacionID = Convert.ToInt32(dr["OrganizacionID"].ToString()),
                             Nombre = dr["Nombre"].ToString(),
                             Direccion = dr["Direccion"].ToString(),
-                            GerenteResponsable = dr["GerenteResponsable"].ToString(),                            
+                            GerenteResponsable = dr["GerenteResponsable"].ToString(),
+                            NCertificadoOMA = dr["NCertificadoOMA"].ToString(),
                             Correo = dr["Correo"].ToString(),
                             Telefono = dr["Telefono"].ToString()
                         });
@@ -96,7 +97,8 @@ namespace CapaDatosRBS
                         oOrganizacion.OrganizacionID = Convert.ToInt32(dr["OrganizacionID"].ToString());
                         oOrganizacion.Nombre = dr["Nombre"].ToString();
                         oOrganizacion.Direccion = dr["Direccion"].ToString();
-                        oOrganizacion.GerenteResponsable = dr["GerenteResponsable"].ToString();                        
+                        oOrganizacion.GerenteResponsable = dr["GerenteResponsable"].ToString();
+                        oOrganizacion.NCertificadoOMA = dr["NCertificadoOMA"].ToString();
                         oOrganizacion.Correo = dr["Correo"].ToString();
                         oOrganizacion.Telefono = dr["Telefono"].ToString();
                     }
@@ -110,6 +112,114 @@ namespace CapaDatosRBS
                 }
             }
         }
+
+        /// <summary>
+        /// Elimina una organización si no tiene dependencias. Devuelve:
+        /// 1 = Éxito, 2 = Dependencias encontradas, 0 = Error
+        /// </summary>
+        public int EliminarOrganizacion(int organizacionId)
+        {
+            int resultado = 0;
+
+            using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
+            {
+                SqlCommand cmd = new SqlCommand("usp_EliminarOrganizacion", oConexion);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@OrganizacionID", organizacionId);
+
+                SqlParameter outResultado = new SqlParameter("@Resultado", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.Output
+                };
+                cmd.Parameters.Add(outResultado);
+
+                try
+                {
+                    oConexion.Open();
+                    cmd.ExecuteNonQuery();
+                    resultado = Convert.ToInt32(outResultado.Value);
+                }
+                catch (Exception ex)
+                {
+                    resultado = 0; // Error general
+                }
+            }
+
+            return resultado;
+        }
+
+        public int RegistrarOrganizacion(tbOrganizacion oOrganizacion)
+        {
+            int resultado = 0;
+
+            using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
+            {
+                SqlCommand cmd = new SqlCommand("usp_RegistrarOrganizacion", oConexion);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@Nombre", oOrganizacion.Nombre);
+                cmd.Parameters.AddWithValue("@Direccion", oOrganizacion.Direccion);
+                cmd.Parameters.AddWithValue("@GerenteResponsable", oOrganizacion.GerenteResponsable);
+                cmd.Parameters.AddWithValue("@NCertificadoOMA", oOrganizacion.NCertificadoOMA);
+                cmd.Parameters.AddWithValue("@Correo", oOrganizacion.Correo);
+                cmd.Parameters.AddWithValue("@Telefono", (object)oOrganizacion.Telefono ?? DBNull.Value);
+
+                SqlParameter pResultado = new SqlParameter("@Resultado", SqlDbType.Bit);
+                pResultado.Direction = ParameterDirection.Output;
+                cmd.Parameters.Add(pResultado);
+
+                try
+                {
+                    oConexion.Open();
+                    cmd.ExecuteNonQuery();
+                    resultado = Convert.ToInt32(pResultado.Value);
+                }
+                catch
+                {
+                    resultado = 0;
+                }
+            }
+
+            return resultado;
+        }
+
+        public int ModificarOrganizacion(tbOrganizacion oOrganizacion)
+        {
+            int resultado = 0;
+
+            using (SqlConnection oConexion = new SqlConnection(ConexionSqlServer.CN))
+            {
+                SqlCommand cmd = new SqlCommand("usp_ModificarOrganizacion", oConexion);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@OrganizacionID", oOrganizacion.OrganizacionID);
+                cmd.Parameters.AddWithValue("@Nombre", oOrganizacion.Nombre);
+                cmd.Parameters.AddWithValue("@Direccion", oOrganizacion.Direccion);
+                cmd.Parameters.AddWithValue("@GerenteResponsable", oOrganizacion.GerenteResponsable);
+                cmd.Parameters.AddWithValue("@NCertificadoOMA", oOrganizacion.NCertificadoOMA);
+                cmd.Parameters.AddWithValue("@Correo", oOrganizacion.Correo);
+                cmd.Parameters.AddWithValue("@Telefono", (object)oOrganizacion.Telefono ?? DBNull.Value);
+
+                SqlParameter pResultado = new SqlParameter("@Resultado", SqlDbType.Bit);
+                pResultado.Direction = ParameterDirection.Output;
+                cmd.Parameters.Add(pResultado);
+
+                try
+                {
+                    oConexion.Open();
+                    cmd.ExecuteNonQuery();
+                    resultado = Convert.ToInt32(pResultado.Value);
+                }
+                catch
+                {
+                    resultado = 0;
+                }
+            }
+
+            return resultado;
+        }
+
+
 
     }
 }

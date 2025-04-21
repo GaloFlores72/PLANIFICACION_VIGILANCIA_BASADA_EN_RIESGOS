@@ -123,6 +123,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ListaVerificacionController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
+    <Compile Include="Controllers\OrganizacionesController.cs" />
     <Compile Include="Controllers\OrientacionesController.cs" />
     <Compile Include="Controllers\OrientacionEstadoController.cs" />
     <Compile Include="Controllers\PermisosController.cs" />
@@ -2345,6 +2346,8 @@
     <Content Include="Scripts\Views\Lista_De_Verificacion_Crear.js" />
     <Content Include="Scripts\Views\Lista_Verificacion.js" />
     <Content Include="Scripts\Views\Lista_Verificacion_Crear.js" />
+    <Content Include="Scripts\Views\Login_Index.js" />
+    <Content Include="Scripts\Views\Organizacion_Crear.js" />
     <Content Include="Scripts\Views\OrientacionEstado_Crear.js" />
     <Content Include="Scripts\Views\Orientacion_Crear.js" />
     <Content Include="Scripts\Views\Permisos_Crear.js" />
@@ -2384,6 +2387,7 @@
     <Content Include="Views\TipoProveedorServicio\CrearTipoProveedor.cshtml" />
     <Content Include="Views\Pregunta\CrearPregunta.cshtml" />
     <Content Include="Views\Reporte\Superset.cshtml" />
+    <Content Include="Views\Organizaciones\CrearOrganizacion.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

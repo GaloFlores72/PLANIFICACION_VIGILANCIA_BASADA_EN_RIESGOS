@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CapaModeloRBS
 {
-   public class tbPregunta
+    public class tbPregunta
     {
         public int PreguntaID { get; set; }
         public int SubtituloID { get; set; }
@@ -16,5 +16,7 @@ namespace CapaModeloRBS
         public int? Estadisticas { get; set; }
         // Relación con Orientaciones
         public List<tbOrientacion> oListaOrientaciones { get; set; } = new List<tbOrientacion>();
+        public tbSubtitulo oSubtitulo { get; set; }
+        public string CodigoPregunta { get; set; }
     }
 }
